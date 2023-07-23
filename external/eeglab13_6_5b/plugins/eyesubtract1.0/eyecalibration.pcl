@@ -1,0 +1,43 @@
+int isi = 1500;     # inter stimulus interval in ms
+int std_isi = 200;  # standard deviation of isi in ms
+double like_dvt = 0.10;   # 0-1 
+int sti_present_times = 1000; # total number of stimuli 
+int l=1000;
+
+loop
+    int i = 0; 
+    until
+         i > 9
+         begin  
+     trial1.set_start_time(i*l);    
+     trial1.present();    
+       i = i + 1;
+ end; 
+ 
+ loop 
+     int i = 0; 
+
+    until 
+         i > 4
+         begin  
+         int  m = i*l*2 + 11*l;
+         trial4.set_start_time(m); 
+          trial4.present();
+          trial5.set_start_time(m + 1000);
+          trial5.present(); 
+          i = i + 1 ; 
+end; 
+loop 
+    int i = 0;
+   
+    until
+         i > 4
+         begin 
+          int p = 11*l + 11*l + 500 + i*2*l;
+         trial6.set_start_time( p);
+         trial6.present();
+         trial7.set_start_time(p + 1000);
+         trial7.present();
+         i = i +1;
+end;         
+
