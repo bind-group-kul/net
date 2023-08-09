@@ -1,4 +1,4 @@
-function net_calculate_leadfield(segimg_filename,dwi_filename,cti_filename,elec_filename,options_leadfield)
+function net_calculate_leadfield(segimg_filename,elec_filename,options_leadfield)
 
 NET_folder=net('path');
 
@@ -6,27 +6,7 @@ NET_folder=net('path');
 
 mri_subject = ft_read_mri(segimg_filename, 'dataformat', 'nifti_spm');  % in mm
 c = ft_convert_units(mri_subject, 'mm'); % in mm
-%mri_subject.seg = mri_subject.anatomy;
 elec = ft_read_sens(elec_filename);
-
-%if not(isempty(dwi_filename))
-if exist(dwi_filename,'file')
-    Vx=spm_vol(dwi_filename);
-    tensor=spm_read_vols(Vx);
-else
-    tensor=zeros(mri_subject.dim(1),mri_subject.dim(2),mri_subject.dim(3),6);
-end
-
-% CTI data
-cti_flg = 0;
-if exist(cti_filename,'file')
-    CTI = ft_read_mri(cti_filename);
-    cti_flg = 1;
-else
-    CTI = 0;
-    cti_flg = 0;
-end
-
 
 conductivity=load([NET_folder filesep 'template' filesep 'tissues_MNI' filesep options_leadfield.conductivity '.mat']);
 
@@ -36,7 +16,6 @@ cond_image=zeros(size(mri_subject.anatomy));
 for i=1:nlayers
     cond_image(mri_subject.anatomy==i)=conductivity.cond_value(i);
 end
-
 
 disp(['NET - Get vol with ' options_leadfield.method ' method...']);
 
@@ -62,7 +41,6 @@ if strcmpi(options_leadfield.method, 'bemcp') || strcmpi(options_leadfield.metho
     cfg.conductivity = conductivity.cond_value;
     cfg.showcallinfo = 'no';
     vol              = ft_prepare_headmodel(cfg, vol);  % in cm
-    %vol.segmentation = mri_subject.seg;
     
 elseif strcmpi(options_leadfield.method, 'simbio')
     tic
@@ -77,13 +55,9 @@ elseif strcmpi(options_leadfield.method, 'simbio')
         image(mri_subject.anatomy==i)=1;
         eval(['mri_subject.' lower(conductivity.tissuelabel{i}) '=image;']);
     end
-    %mri_subject = rmfield(mri_subject,'seg');
     clear image;
     cfg.downsample      = options_leadfield.input_voxel_size;
-    %cfg.numvertices=5000*ones(1,length(conductivity.tissuelabel));
     mesh             = ft_prepare_mesh(cfg, mri_subject);
-    %mesh.tissue = lower(conductivity.tissuelabel);
-    %mesh.tissuelabel = lower(conductivity.tissuelabel);
     
     cfg = [];
     cfg.downsample      = options_leadfield.input_voxel_size;
@@ -95,7 +69,6 @@ elseif strcmpi(options_leadfield.method, 'simbio')
     cfg.tissue       = conductivity.tissuelabel;
     vol              = ft_prepare_headmodel(cfg,mesh);   % in cm
     vol.ttclc = toc;
-%    vol.segmentation = mri_subject.seg;
 
 elseif strcmpi(options_leadfield.method, 'gfdm')
     tic
@@ -115,17 +88,13 @@ elseif strcmpi(options_leadfield.method, 'gfdm')
         image(mri_subject.anatomy==i)=1;
         eval(['mri_subject.' lower(conductivity.tissuelabel{i}) '=image;']);
     end
-    %mri_subject = rmfield(mri_subject,'seg');
     clear image;
     
     cfg = [];
     cfg.spmversion = 'spm12';
     cfg.downsample      = options_leadfield.input_voxel_size;
     mri_ds              = ft_volumedownsample(cfg, mri_subject);
-    % CTI - line 124
-    if(cti_flg)
-        cti_ds          = gfdm_cti_downsample(cfg, CTI);
-    end
+    
     
     cfg                  = [];
     cfg.downsample       = options_leadfield.input_voxel_size;
@@ -134,13 +103,9 @@ elseif strcmpi(options_leadfield.method, 'gfdm')
     cfg.type             = options_leadfield.method;
     cfg.segmentation     = mri_ds;
     cfg.conductivity     = conductivity;
-    % CTI - line 136
-    if(cti_flg)
-        cfg.CTI          = cti_ds;
-    end
+    
     cfg.gm_idx           = gm_idx;
     vol                  = gfdm_prepare_headmodelMex(cfg);   % in cm 
-%     vol                  = gfdm_prepare_headmodel(cfg);   % in cm 
     vol.ttclc = toc;
    
 elseif strcmpi(options_leadfield.method, 'fns')
@@ -181,8 +146,6 @@ cfg.grid.unit      = 'cm';
 cfg.grid.tight     = 'yes';
 subject_grid        = ft_prepare_sourcemodel(cfg);
 
-% save('gFDM_srcspc.mat', '-v7.3')
-
 % -----------------------------------------------------
 %% Put dipole grid (template_grid) in gray matter
 % Calculate Leadfield matrix (leadfield)
@@ -192,18 +155,6 @@ disp('Calculate LEAD FIELD matrix...');
 tic
 vol = ft_convert_units(vol, 'cm');
 
-% cfg             = [];
-% cfg.ddx         = ddx;
-% cfg.channel     = elec.label;
-% cfg.vol         = vol;
-% cfg.elec        = elec;
-% cfg.elec.nelec  = length(elec.elecpos);
-% cfg.grid        = subject_grid;
-% cfg.grid.tight    = 'yes';
-% cfg.conductivity  = conductivity;
-% cfg.conductivity.map = cond_image;
-% cfg.mri    = mri_subject;
-
 cfg                  = [];
 cfg.ddx              = ddx;
 cfg.channel          = elec.label;
@@ -211,11 +162,7 @@ cfg.vol              = vol;
 cfg.elec             = elec;
 cfg.grid             = subject_grid;
 cfg.conductivity     = conductivity;
-% cfg.gm_idx           = [1 2];
 cfg.mri              = mri_subject;
-
-%     save('prv_vol_1mm.mat', '-v7.3')
-%     load('prv_vol_1mm.mat')
  
 leadfield       = net_prepare_leadfield(cfg);
 leadfield.ttclc = toc;
