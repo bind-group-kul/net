@@ -12,14 +12,6 @@ tpmref_filename=[NET_folder filesep 'template' filesep 'tissues_MNI' filesep 'eT
 
 segimg_filename=[ddx filesep 'anatomy_prepro_segment.nii'];
 
-dwi_filename_orig=[ddx filesep 'dwi_tensor.nii'];
-
-dwi_filename=[ddx filesep 'dwi_tensor_prepro.nii'];
-
-cti_filename_orig=[ddx filesep 'cti.nii'];
-
-cti_filename = [ddx filesep 'cti_prepro.nii'];
-
 bx_filename = [ddx filesep 'bx_sMRI.mat'];
 
 elec_filename=[ddx filesep 'electrode_positions.sfp'];
