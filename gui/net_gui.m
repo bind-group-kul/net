@@ -888,20 +888,11 @@ for subject_i = handles.subjects
     
     % Initialize structural MR image
     net_initialize_mri(xls_data(subject_i).anat_filename,[ddx filesep 'anatomy.nii']);
-    
-    % Initialize DWI image (if available)
-    if isfield(xls_data(subject_i),'dwi_filename')
-        net_initialize_mri(xls_data(subject_i).dwi_filename,[ddx filesep 'dwi_tensor.nii']);
-    end
-    
-    % Initialize CTI image (if available)
-    if isfield(xls_data(subject_i),'cti_filename')
-        net_initialize_mri(xls_data(subject_i).cti_filename,[ddx filesep 'cti.nii']);
-    end
 
     % Convert raw EEG data to SPM format
-    net_initialize_eeg(xls_data(subject_i).eeg_filename,xls_data(subject_i).experiment_filename,raweeg_filename,options.eeg_convert,options.pos_convert);
-
+    if ~(exist(raweeg_filename)==2)
+        net_initialize_eeg(xls_data(subject_i).eeg_filename,xls_data(subject_i).experiment_filename,raweeg_filename,options.eeg_convert,options.pos_convert);
+    end
     
     % HEAD MODELLING
     
@@ -914,14 +905,11 @@ for subject_i = handles.subjects
     % creating tissue classes
     net_tissues_sMRI(img_filename,tpm_filename,options.sMRI);
     
-    % coregister dwi_tensor to MRI
-    net_coregister_dwi(dwi_filename_orig,img_filename);
-    
     % coregister electrodes to MRI
     net_coregister_sensors(xls_data(subject_i).markerpos_filename,ddx,ddy,anat_filename,options.pos_convert);
     
     % calculate head model
-    net_calculate_leadfield(segimg_filename,dwi_filename,cti_filename,elec_filename,options.leadfield);
+    net_calculate_leadfield(segimg_filename,elec_filename,options.leadfield);
 
     handles.table_steps.head_model(subject_i,1) = 1;
     setappdata(handles.gui,'table_steps',handles.table_steps);
