@@ -1,6 +1,5 @@
 function  source=net_sourceanalysis(eeg_filename,headmodel_filename,source_filename,options_source)
 
-
 NET_folder=net('path');
 
 D = spm_eeg_load(eeg_filename);
@@ -22,32 +21,20 @@ normalizeparam=options_source.lead_normalizeparam;
 leadfield=headmodel.leadfield;
 
 vect=find(leadfield.inside);
-
 Ndipoles=length(vect);
-
 Nchan=length(leadfield.label);
-
 lf=zeros(Nchan,3*Ndipoles);
 
-
 for ii=1:Ndipoles
-    
     ind=vect(ii);
-    
     lf(:, (3*ii-2):(3*ii))=leadfield.leadfield{ind};
-    
 end
 
-
 if strcmpi(lead_demean,'yes')
-    
     for i=1:size(lf,2)
         lf(:,i) = lf(:,i) - mean(lf(:,i));
     end
-       
 end
-
-
 
 %optionally apply leadfield normalization
 switch normalize
@@ -81,11 +68,8 @@ switch normalize
 end
 
 for ii=1:Ndipoles
-    
     ind=vect(ii);
-    
     leadfield.leadfield{ind}=lf(:, (3*ii-2):(3*ii));
-    
 end
 
 % --------------------------------------------------------------
@@ -101,7 +85,6 @@ list_eeg      = selectchannels(D,'EEG');
 data.label    = data.label(list_eeg);
 data.trial{1} = data.trial{1}(list_eeg, :);
 data.cov      = D.noisecov_matrix;
-
 
 % --------------------------------------------
 % 3 Source localisation
@@ -120,23 +103,15 @@ source.sensor_data=data.trial{1};
 source.elecpos=elecpos;
 source.events=D.triggers;
 
-
-
 pca_mat = zeros(Ndipoles,3*Ndipoles);
 
 bar_len = 0;
 for k=1:Ndipoles
-    tic;
-     %disp(['calculating first PC for dipole ' num2str(k) ' / ' num2str(Ndipoles)]);
-    
+    tic;    
     sigx = source.imagingkernel(1+3*(k-1),:)*source.sensor_data;
-    
     sigy = source.imagingkernel(2+3*(k-1),:)*source.sensor_data;
-    
     sigz = source.imagingkernel(3*k,:)*source.sensor_data;
-    
     [coeff,score] = pca([sigx ; sigy ; sigz]');
-    
     pca_mat(k,3*k-2:3*k) = coeff(:,1)';
     t=toc;
     bar_len = net_progress_bar_t(['NET source: ', subject_info, ': calculate first PCs'], k, Ndipoles, t, bar_len);
@@ -144,12 +119,9 @@ end
 
 source.pca_projection=pca_mat;
 
-
 if strcmpi(options_source.mni_initialize,'yes')
 
 %% generate trasnformation to MNI space
-
-
 Vt.dim      = headmodel.leadfield.dim;
 Vt.pinfo    = [0.000001 ; 0 ; 0];
 Vt.dt       = [16 0];
@@ -166,30 +138,15 @@ for i=1:length(vox_list)
     Vt.n        = [i 1];
     spm_write_vol(Vt, data_vox);  
 end
-% 
-% Vt.fname=[ddx filesep 'tmp2.nii'];
-% Vt.n        = [1 1];
-% data_vox=zeros(headmodel.leadfield.dim);
-% for i=1:length(vox_list)
-%     index=vox_list(i);
-%     [a,b,c]=ind2sub(headmodel.leadfield.dim,index);
-%     data_vox(a,b,c)=1;
-%     
-% end
-% spm_write_vol(Vt, data_vox); 
 
 output_res=options_source.mni_output_res;
 smooth_fwhm=options_source.mni_smoothing;
-
 input_images=[ddx filesep 'tmp.nii'];
-
 bb=net_world_bb([tpmref_filename ',1']);
-
 Vx=spm_vol(tpmref_filename);
 data=spm_read_vols(Vx);
 mask=zeros(size(data,1),size(data,2),size(data,3));
 mask(data(:,:,:,1)>0.3)=1;
-
 
 Vx(1).fname=[ddx filesep 'mask.nii'];
 spm_write_vol(Vx(1),mask);
@@ -208,7 +165,6 @@ matlabbatch{1}.spm.util.defs.out{1}.push.prefix = 'w';
 
 spm_jobman('run', matlabbatch);
 
-
 clear matlabbatch;
 
 matlabbatch{1}.spm.spatial.coreg.write.ref = {[ddx filesep 'wtmp.nii,1']};
@@ -220,21 +176,16 @@ matlabbatch{1}.spm.spatial.coreg.write.roptions.prefix = 'r';
 
 spm_jobman('run', matlabbatch);
 
-
 Vy=spm_vol([ddx filesep 'rmask.nii']);
 [mask_new,xyz]=spm_read_vols(Vy);
 mask_new=round(mask_new);
-
 inside=find(mask_new(:)==1);
-
 mat=zeros(length(vox_list),length(inside));
-
 V=spm_vol([ddx filesep 'wtmp.nii']);
 
 bar_len  = 0;
 for i=1:length(vox_list)
    tic;
-   %disp(i);
    data=spm_read_vols(V(i));
    mat(i,:)=data(inside);
    t = toc;
@@ -247,16 +198,13 @@ delete([ddx filesep 'wtmp.nii']);
 delete([ddx filesep 'mask.nii']);
 delete([ddx filesep 'rmask.nii']);
 
-
 source.dim_mni=Vy.dim;
 source.transform_mni=Vy.mat;
 source.inside_mni=(mask_new(:)==1);
 source.pos_mni=xyz';
 source.spatial_filter_mni=mat';
 
-
 end
-
 
 save(source_filename, '-v7.3','source');  % to save the matrix bigger than 2GB, added by QL, 04.12.2014
 

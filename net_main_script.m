@@ -30,7 +30,7 @@ pathx=[pathname filename];
 if filterindex == 0
     error('No file selected! NET stops running.')
 else
-    fprintf(['Selected file: ' pathx '\nReading parameters...\n\n'])
+    fprintf(['\nSelected file: ' pathx '\nReading parameters...\n\n'])
 end
 
 xls_data = net_read_data(pathx);
@@ -48,7 +48,6 @@ options.stats.subjects=[];
 nsubjs = size(xls_data,1);
       
 for subject_i = 1:nsubjs
-    
  
     if nodata(xls_data(subject_i).anat_filename) || nodata(xls_data(subject_i).eeg_filename) || nodata(xls_data(subject_i).markerpos_filename)
         disp(['Subject ' num2str(subject_i) ': MISSING REQUIRED DATA (EEG, sensors position or structural MRI). Subject skipped.']);
@@ -91,12 +90,6 @@ for subject_i = 1:nsubjs
         %% Initialize structural MR image 
         net_initialize_mri(xls_data(subject_i).anat_filename,[ddx filesep 'anatomy.nii']);
         
-        %% Initialize DWI image (if available)
-        net_initialize_mri(xls_data(subject_i).dwi_filename,[ddx filesep 'dwi_tensor.nii']);
-        
-        %% Initialize CTI image (if available)
-        net_initialize_mri(xls_data(subject_i).cti_filename,[ddx filesep 'cti.nii']);
-        
         %% Convert raw EEG data to SPM format
         net_initialize_eeg(xls_data(subject_i).eeg_filename,xls_data(subject_i).experiment_filename,raweeg_filename,options.eeg_convert,options.pos_convert);
         
@@ -115,19 +108,11 @@ for subject_i = 1:nsubjs
         %% creating tissue classes
          net_tissues_sMRI(img_filename,tpm_filename,options.sMRI);
 
-        %% coregister dwi_tensor to MRI
-        net_coregister_dwi(dwi_filename_orig,img_filename);
-
         %% coregister electrodes to MRI
         net_coregister_sensors(xls_data(subject_i).markerpos_filename,ddx,ddy,anat_filename,options.pos_convert);
         
         %% calculate head model
-%         save('head_model_simbio.mat', '-v7.3');
-%         save('cti_test.mat', '-v7.3');
-%         load('head_model_simbio.mat');
-%         options.leadfield.method = 'gfdm';
-         net_calculate_leadfield(segimg_filename,dwi_filename,cti_filename,elec_filename,options.leadfield);
-%         net_calculate_leadfield(segimg_filename,dwi_filename,elec_filename,options.leadfield);
+         net_calculate_leadfield(segimg_filename,elec_filename,options.leadfield);
         fprintf('\n*** HEAD MODELLING: DONE! ***\n')
     end
   
@@ -135,7 +120,7 @@ for subject_i = 1:nsubjs
         fprintf('\n*** SIGNAL PROCESSING: START... ***\n')
         %% NET - Detecting and Repairing the bad channels    
         net_repair_badchannel(processedeeg_filename, options.badchannel_detection);
-     %   net_plotPSD(raweeg_filename,processedeeg_filename)
+
         %% filtering EEG data
         net_filtering(processedeeg_filename,options.filtering);
         
@@ -153,19 +138,15 @@ for subject_i = 1:nsubjs
         
         %% Ocular artifact attenuation using BSS
         net_ocular_correction_wKurt(processedeeg_filename, options.ocular_correction);
-        %net_plotPSD(raweeg_filename,processedeeg_filename)
         
         %% Movement artifact attenuation using BSS
         net_movement_correction_wSampEn(processedeeg_filename, options.mov_correction);
-        %net_plotPSD(raweeg_filename,processedeeg_filename)
         
         %% Myogenic artifact removal using BSS
         net_muscle_correction_gamma_ratio(processedeeg_filename, options.muscle_correction);
-        %net_plotPSD(raweeg_filename,processedeeg_filename)
         
         %% Cardiac artifact removal using BSS
         net_cardiac_correction_skew(processedeeg_filename, options.cardiac_correction);
-        %net_plotPSD(raweeg_filename,processedeeg_filename)
         
         %% De-spiking EEG data
         net_despiking(processedeeg_filename,options.despiking);
@@ -175,10 +156,8 @@ for subject_i = 1:nsubjs
         
         %% resampling EEG data for source localization
         net_resampling(processedeeg_filename,options.resampling_src);
-       % net_plotPSD(raweeg_filename,processedeeg_filename)
-       % saveas(gcf,[dd filesep 'psd.jpg'])
-       % close all
-       fprintf('\n*** SIGNAL PROCESSING: DONE! ***\n')
+
+        fprintf('\n*** SIGNAL PROCESSING: DONE! ***\n')
     end
    
     if strcmp(xls_data(subject_i).source_localization, 'on')
@@ -205,13 +184,9 @@ for subject_i = 1:nsubjs
         net_ica_connectivity_revised(source_filename,options.ica_conn);
         
         %% seed-based connectivity analysis
-%         net_seed_connectivity(source_filename,options.seeding);
+        net_seed_connectivity(source_filename,options.seeding);
         
         fprintf('\n*** CONNECTIVITY ANALYSIS: DONE! ***\n')
-    end
-    
-    if strcmp(xls_data(subject_i).statistical_analysis, 'on')
-        options.stats.subjects=[options.stats.subjects subject_i];
     end
     
 end

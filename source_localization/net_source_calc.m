@@ -15,75 +15,44 @@ switch cfg.method
         list_eeg=[1:size(data.trial{1},1)];
         
         cfg.channel = list_eeg;
-        
         cfg.elec.pnt = cfg.sens.elecpos;
-        % cfg.elec.label = cfg.sens.label; % Gaia
         cfg.elec.label = upper(cfg.sens.label); % Gaia
-        
         cfg.keeptrials='yes';
         cfg.feedback ='text';
         
-        % Gaia
-        %{
-        if strcmpi(data.label,cfg.elec.label) % added by JS: same label order but different upper/lower cases
-            cfg.elec.label = data.label;
-        end
-        %}
-        
-        source  = ft_sourceanalysis(cfg, data);
-        
-        %ndip=length(cfg.grid.leadfield);
+        source  = ft_sourceanalysis(cfg, data);        
         ntp=length(data.time{1});
-   
-            
-            nsamples=min(1000,ntp);
-            
-            voxel_ind=find(source.inside==1);
-            
-            ImageGridAmp=zeros(3*length(voxel_ind),nsamples);
-           
-            
-            for k=1:length(voxel_ind)
-                
-                tmp=source.avg.mom{voxel_ind(k)};
-                ImageGridAmp(3*(k-1)+1:3*k,1:nsamples)=tmp(:,1:nsamples);
-                
-            end
-            
-            source.imagingkernel=ImageGridAmp*pinv(data.trial{1}(:,1:nsamples));
-            
-            if strcmp(cfg.method,'mne') && cfg.mne.deflect==1
-                w=source.imagingkernel;
-                for ii=1:size(w,1)
-                    w(ii,:)=w(ii,:)./(w(ii,:)*G(:,ii));
-                end
-                source.imagingkernel=w;
-            end
+        nsamples=min(1000,ntp);
+        voxel_ind=find(source.inside==1);
+        ImageGridAmp=zeros(3*length(voxel_ind),nsamples);
+
+        for k=1:length(voxel_ind)
+            tmp=source.avg.mom{voxel_ind(k)};
+            ImageGridAmp(3*(k-1)+1:3*k,1:nsamples)=tmp(:,1:nsamples);
+        end
+
+        source.imagingkernel=ImageGridAmp*pinv(data.trial{1}(:,1:nsamples));
         
-           
-        
+        if strcmp(cfg.method,'mne') && cfg.mne.deflect==1
+            w=source.imagingkernel;
+            for ii=1:size(w,1)
+                w(ii,:)=w(ii,:)./(w(ii,:)*G(:,ii));
+            end
+            source.imagingkernel=w;
+        end
+
         source=rmfield(source,'avg');
-            
         source=rmfield(source,'trialinfo');
-            
         source=rmfield(source,'cfg');
-        
         source.software='fieldtrip';
-        
         source.method=cfg.method;
-        
-        source.cfg=cfg;
-        
-        
-        
+        source.cfg=cfg;        
         
         %% brainstorm
     case {'wmne','dspm','sloreta','lcmvbf','gls_p','glsr','glsr_p','mnej','mnej_p'}%(strcmp(cfg.method,'wmne') || strcmp(cfg.method,'dspm') || strcmp(cfg.method,'sloreta'))
         
         %%% head model
-        
         sigs=data.trial{1};
-               
         
         HeadModel.Gain=G;
         HeadModel.GridLoc = cfg.grid.pos(cfg.grid.inside',:);
@@ -94,9 +63,6 @@ switch cfg.method
         HeadModel.ECOGMethod = '';
         HeadModel.SEEGMethod = '';
         HeadModel.HeadModelType = 'volume';
-        HeadModel.Comment = 'BEM_EEG';
-        % % %         Harea=(cfg.grid.xgrid(2)-cfg.grid.xgrid(1))*(cfg.grid.ygrid(2)-cfg.grid.ygrid(1))*(cfg.grid.zgrid(2)-cfg.grid.zgrid(1));
-        % % %         HeadModel.area=repmat(Harea,size(A,2),1);
         %%% localization
         OPTIONS=[];
         OPTIONS.SourceOrient={'free'};
@@ -106,23 +72,17 @@ switch cfg.method
         OPTIONS.Channel=[1:nchan]';
         OPTIONS.HeadModelFile='';
         OPTIONS.DataTime=data.time{1};
-        % % % OPTIONS.NoiseCovRaw=;%%??
-        % % % OPTIONS.NoiseCov=OPTIONS.NoiseCovRaw ./ nAvg; %??? %% eye(length(OPTIONS.GoodChannel));
-        OPTIONS.NoiseCov=cfg.noisecov;
+        OPTIONS.NoiseCov=cfg.NoiseCov;  %JS 08.2023
         OPTIONS.GoodChannel=[1:nchan]';
         OPTIONS.DataFile='';
         OPTIONS.Data=sigs;
-        OPTIONS.InverseMethod=cfg.method;%% 'dspm', 'sloreta'
+        OPTIONS.InverseMethod=cfg.method;
         OPTIONS.ResultFile='';
         OPTIONS.ComputeKernel=cfg.computekernel;
         OPTIONS.Comment='';
         OPTIONS.DisplayMessages=1;
         OPTIONS.DataTypes=repmat({'EEG'},nchan,1);
         OPTIONS.ChannelTypes=repmat({'EEG'},nchan,1);
-        %         OPTIONS.depth=cfg.depth;
-        
-        
-        
         
         switch(OPTIONS.InverseMethod)
             case 'lcmvbf'
@@ -140,7 +100,6 @@ switch cfg.method
             case 'wmne',    strMethod = '_wMNE';
                 OPTIONS.weightlimit=cfg.wmne.weightlimit;
                 OPTIONS.SNR=cfg.wmne.snr;
-                
                 
             case 'gls',     strMethod = '_GLS';
             case 'gls_p',   strMethod = '_GLSP';
@@ -215,31 +174,24 @@ switch cfg.method
             otherwise
                 error('Unknown method');
         end
-        
          
         source.dim     = cfg.grid.dim;
         source.time    = data.time{1};
         source.pos     = cfg.grid.pos;
         source.inside  = cfg.grid.inside;
-        source.outside = cfg.grid.outside;
+        source.outside = ~cfg.grid.inside; %JS 08.2023
+        source.imagingkernel=Results.ImagingKernel;
         
-         
-            
-            source.imagingkernel=Results.ImagingKernel;
-            
-            if strcmp(cfg.method,'wmne') && cfg.wmne.deflect==1
-                w=source.imagingkernel;
-                for ii=1:size(w,1)
-                    w(ii,:)=w(ii,:)./(w(ii,:)*G(:,ii));
-                end
-                source.imagingkernel=w;
+        if strcmp(cfg.method,'wmne') && cfg.wmne.deflect==1
+            w=source.imagingkernel;
+            for ii=1:size(w,1)
+                w(ii,:)=w(ii,:)./(w(ii,:)*G(:,ii));
             end
-            
+            source.imagingkernel=w;
+        end
         
         source.software='brainstorm';
-        
         source.method=cfg.method;
-        
         source.cfg=OPTIONS;
         
     otherwise
