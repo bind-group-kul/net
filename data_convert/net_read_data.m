@@ -33,33 +33,6 @@ for subject_i = subjects % modified subject_i = 1:nsubjs    % GT 03.22
     end
         
     end
-
-    if isfield(xls_data(subject_i),'dwi_filename') % added GT 03.22
-        if isnan( xls_data(subject_i).dwi_filename  )
-            
-            disp(['subject' num2str(subject_i) ' : no MR diffusion tensor file.'])
-            xls_data(subject_i).dwi_filename = '';
-            
-        elseif not(exist( xls_data(subject_i).dwi_filename,'file'))
-            
-            disp(['subject' num2str(subject_i) ' : MR diffusion tensor file not found! Not used for processing.'])
-            xls_data(subject_i).dwi_filename = '';
-        end
-    end
-    
-    %check CTI image, added by JS 10.Nov.2021
-    if isfield(xls_data(subject_i),'cti_filename')  % added GT 03.22
-        if isnan( xls_data(subject_i).cti_filename  )
-            
-            disp(['subject' num2str(subject_i) ' : no CT anatomy file.'])
-            xls_data(subject_i).cti_filename = '';
-            
-        elseif not(exist( xls_data(subject_i).cti_filename,'file'))
-            
-            disp(['subject' num2str(subject_i) ' : CT anatomy file not found! Not used for processing.'])
-            xls_data(subject_i).cti_filename = '';
-        end
-    end
     
     %check field of external events file, added by MZ, 11.Dec.2017
     if isfield(xls_data(subject_i),'experiment_filename')
@@ -71,7 +44,6 @@ for subject_i = subjects % modified subject_i = 1:nsubjs    % GT 03.22
             xls_data(subject_i).experiment_filename = '';
         end
     end
-
 
 end
 
