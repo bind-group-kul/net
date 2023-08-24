@@ -1,8 +1,6 @@
 % net_main_script.m
 %
-
-addpath( genpath(net('path')) )
-
+clear, clc
 %% Set the path for the NET toolbox folder and add it to MATLAB search directory
 try
     NET_folder = net('path');
@@ -17,34 +15,56 @@ catch
      end
 end
 
-%% Read all the parameters from Preprocessing_parameters.xls
-fprintf('Select file (*.xlsx; *.xls) with datasets and parameters: \n');
+%% Read all the parameters in the processing_directory
+% fprintf('Select file (*.xlsx; *.xls) with datasets and parameters: \n');
+fprintf(['NET - Select processing directory containing the excel files: *_dataset.xlsx, *_parameters_prepro.xlsx, *_parameters_analysis.xlsx) \n']);
 
-[filename, pathname, filterindex] = uigetfile( ...
-       {'*.xlsx','XLS-file (*.xlsx)'; ...
-        '*.xls','XLS-file (*.xls)'}, ...
-        'Pick a file', ...
-        'MultiSelect', 'on');
+% [filename, pathname, filterindex] = uigetfile( ...
+%        {'*.xlsx','XLS-file (*.xlsx)'; ...
+%         '*.xls','XLS-file (*.xls)'}, ...
+%         'Pick a file', ...
+%         'MultiSelect', 'on');
 
-pathx=[pathname filename];
-if filterindex == 0
-    error('No file selected! NET stops running.')
-else
-    fprintf(['\nSelected file: ' pathx '\nReading parameters...\n\n'])
+pathx = uigetdir( ...
+       NET_folder,...
+       'NET - Select processing directory');
+
+dirname = strsplit(pathx,filesep);
+pathdata = [pathx filesep dirname{end} '_dataset.xlsx'];
+pathprepro = [pathx filesep dirname{end} '_parameters_prepro.xlsx'];
+pathanalysis = [pathx filesep dirname{end} '_parameters_analysis.xlsx'];
+if ~exist(pathdata)
+    error('No dataset file in the selected directory! NET stops running.')
+elseif ~exist(pathprepro)
+    error('No preprocessing parameters file in the selected directory! NET stops running.')
+elseif ~exist(pathanalysis)
+    error('No analysis parameters file in the selected directory! NET stops running.')
 end
 
-xls_data = net_read_data(pathx);
-options=net_read_options(pathx);
+% pathx=[pathname filename];
+% if filterindex == 0
+%     error('No file selected! NET stops running.')
+% else
+%     fprintf(['\nSelected file: ' pathx '\nReading parameters...\n\n'])
+% end
+
+fprintf(['\nNET - Reading datasets... \nSelected file: ' pathdata '\n\n'])
+xls_data = net_read_data(pathdata);
+
+fprintf(['\nNET - Reading parameters...\nSelected files: ' pathprepro '\nand \n' pathanalysis '\n\n'])
+opt1 =net_gui_read_options(pathprepro,'prepro'); opt2 = net_gui_read_options(pathanalysis,'analysis');
+options = cell2struct([struct2cell(opt1);struct2cell(opt2)],[fieldnames(opt1);fieldnames(opt2)]); clear opt1 opt2
+
 
 %% Pre-processing data
 [dd2,ff2,ext]=fileparts(pathx);
-pathy=[dd2 filesep ff2];
-if ~isdir(pathy)
-    mkdir(pathy);  % Create the output folder if it doesn't exist..
-    disp(['NET - Generating output_folder: ' pathy]);
-end
+% pathy=[dd2 filesep ff2];
+% if ~isdir(pathy)
+%     mkdir(pathy);  % Create the output folder if it doesn't exist..
+%     disp(['NET - Generating output_folder: ' pathy]);
+% end
 
-options.stats.subjects=[];
+% options.stats.subjects=[];
 nsubjs = size(xls_data,1);
       
 for subject_i = 1:nsubjs
@@ -59,10 +79,10 @@ for subject_i = 1:nsubjs
     end
     
     %% initialize directories
-    dd=[pathy filesep 'dataset' num2str(subject_i)];
+    dd=[pathx filesep 'dataset' num2str(subject_i)];
     if ~isdir(dd)
         mkdir(dd);  % Create the output folder if it doesn't exist..
-        disp(['NET - Generating output_folder: ' dd]);
+        fprintf(['NET - Generating output_folder: ' dd '\n\n']);
     end
     
     ddx=[dd filesep 'mr_data'];
@@ -191,9 +211,35 @@ for subject_i = 1:nsubjs
     
 end
 
-if not(isempty(options.stats.subjects))
-    fprintf('\n*** STATISTICAL ANALYSIS: START... ***\n')
-    if length(options.stats.subjects) >= 2
+if not(isnan(options.stats.subjects)) % JS, 08.2023 - included several options
+    if strfind(options.stats.subjects,' ')
+        error('Please remove all the spaces from the field statistical_analysis/stats.subj. NET stops running.')
+    end
+    if strcmpi(options.stats.subjects,'all')        % all subjs
+        options.stats.subjects = 1:nsubjs;
+    elseif strcmpi(options.stats.subjects,'none')   % no subjs
+        fprintf('\nNo statistical analyses to run.')
+        fprintf('\n*** END OF PROCESSING. ***\n')
+        return
+    else                                            % some subjs
+        if ~isempty(strfind(options.stats.subjects,':'))    % first_sbj:last_sbj
+            tmp = strsplit(options.stats.subjects,':');
+            options.stats.subjects = str2num(tmp{1}):str2num(tmp{2});
+            if str2num(tmp{2})>nsubjs
+                error('Number of datasets included in the statistic analysis higher than the available datasets. NET stops running.')
+            end
+        elseif ~isempty(strfind(options.stats.subjects,',')) % sbj1,sbj2,...
+            tmp = strsplit(options.stats.subjects,','); dt = [];
+            for i = 1:length(tmp), dt = [dt, str2num(tmp{i})]; end
+            options.stats.subjects = sort(dt);
+            if options.stats.subjects(end)>nsubjs
+                error('Number of datasets included in the statistic analysis higher than the available datasets. NET stops running.')
+            end
+        end
+    
+    end   
+    if nsubjs>=2 && numel(options.stats.subjects) >=2
+        fprintf('\n*** STATISTICAL ANALYSIS: START... ***\n')
         net_group_analysis(pathy,options.stats);
     else
         fprintf('At least 2 SUBJECTS NEEDED to perform statistical analyses!')
