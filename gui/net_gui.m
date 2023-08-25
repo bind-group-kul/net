@@ -524,7 +524,7 @@ function load_data(hObject, eventdata, handles)
 handles = guidata(gcbo);
 
     % choose Excel file
-    [filename, pathname] = uigetfile({'.xlsx';'.xls'},'',handles.net_path);
+    [filename, pathname] = uigetfile({'*.xlsx';'*.xls'},'',handles.net_path);
     
     if ischar(filename)
         handles.chosen_file = [pathname filename];
@@ -1340,6 +1340,9 @@ function programQuit(hObject, eventdata, handles)
     choice = questdlg('Are you sure you want to quit the program?','Quit','Yes','No','No');
     if strcmp(choice,'Yes')
         close all force
+        gui_path = fileparts(mfilename('fullpath')); % JS 08.2023 - remove net from the path
+        net_path = fileparts(gui_path);
+        rmpath(genpath(net_path))
         disp('___ Quitted NET ___')
     end
 end                 % --- end programQuit
