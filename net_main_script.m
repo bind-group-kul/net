@@ -1,6 +1,5 @@
 % net_main_script.m
-%
-clear, clc
+
 %% Set the path for the NET toolbox folder and add it to MATLAB search directory
 try
     NET_folder = net('path');
