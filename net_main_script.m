@@ -211,42 +211,7 @@ for subject_i = 1:nsubjs
     
 end
 
-if not(isnan(options.stats.subjects)) % JS, 08.2023 - included several options
-    if strfind(options.stats.subjects,' ')
-        error('Please remove all the spaces from the field statistical_analysis/stats.subj. NET stops running.')
-    end
-    if strcmpi(options.stats.subjects,'all')        % all subjs
-        options.stats.subjects = 1:nsubjs;
-    elseif strcmpi(options.stats.subjects,'none')   % no subjs
-        fprintf('\nNo statistical analyses to run.')
-        fprintf('\n*** END OF PROCESSING. ***\n')
-        return
-    else                                            % some subjs
-        if ~isempty(strfind(options.stats.subjects,':'))    % first_sbj:last_sbj
-            tmp = strsplit(options.stats.subjects,':');
-            options.stats.subjects = str2num(tmp{1}):str2num(tmp{2});
-            if str2num(tmp{2})>nsubjs
-                error('Number of datasets included in the statistic analysis higher than the available datasets. NET stops running.')
-            end
-        elseif ~isempty(strfind(options.stats.subjects,',')) % sbj1,sbj2,...
-            tmp = strsplit(options.stats.subjects,','); dt = [];
-            for i = 1:length(tmp), dt = [dt, str2num(tmp{i})]; end
-            options.stats.subjects = sort(dt);
-            if options.stats.subjects(end)>nsubjs
-                error('Number of datasets included in the statistic analysis higher than the available datasets. NET stops running.')
-            end
-        end
-    
-    end   
-    if nsubjs>=2 && numel(options.stats.subjects) >=2
-        fprintf('\n*** STATISTICAL ANALYSIS: START... ***\n')
-        net_group_analysis(pathy,options.stats);
-    else
-        fprintf('At least 2 SUBJECTS NEEDED to perform statistical analyses!')
-    end
-else
-    fprintf('No statistical analyses to run.')
-end
+net_statistical_analysis(pathx,options.stats,nsubjs);
 
 fprintf('\n*** END OF PROCESSING. ***\n')
 rmpath( genpath(net('path')) )
