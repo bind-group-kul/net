@@ -20,7 +20,7 @@ box = uiextras.VBox('Parent',gui_data,'Padding',15*min(k)); % 'Spacing',10*min(k
         uiextras.Empty('Parent',box_menu_dataset);
 
         % Show data from dataset excel file
-        [~,xlsdata] = xlsread(handles.input_filename,1);
+        [~,xlsdata] = xlsread(handles.input_filename,1,'A1:D1000'); %JS 08.2023
         handles.xls_names = xlsdata(1,:);
         handles.xls_data = xlsdata(2:end,:);
 
@@ -257,8 +257,15 @@ else
     if isfield(handles,'flag_remove') && handles.flag_remove > 0
         rmdir([handles.outdir filesep 'dataset' num2str(handles.flag_remove)],'s')
     end
-    
-    new_data = table([handles.xls_names; handles.xls_data]);
+    [~,xlsonoffdata] = xlsread(handles.input_filename,1,'E1:J1000'); %JS 08.2023: write 'on' to all steps to have the file ready for run_no_gui
+    xls_onoff = xlsonoffdata(1,:);
+    if size(xlsonoffdata,1)-1~=size(handles.xls_data,1) 
+        tmp = cell(size(handles.xls_data,1),size(xlsonoffdata,2)); tmp(:) = {'on'};
+        xlsonoffdata = tmp; 
+    else
+        xlsonoffdata = xlsonoffdata(2:end,:);
+    end    
+    new_data = table([handles.xls_names xls_onoff; handles.xls_data, xlsonoffdata]);
     if exist(handles.dataset_filename,'file')
         delete(handles.dataset_filename)
     end
