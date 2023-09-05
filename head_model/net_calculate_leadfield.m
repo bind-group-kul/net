@@ -108,16 +108,16 @@ elseif strcmpi(options_leadfield.method, 'gfdm')
     vol                  = gfdm_prepare_headmodelMex(cfg);   % in cm 
     vol.ttclc = toc;
    
-elseif strcmpi(options_leadfield.method, 'fns')
-    
-    cfg=[];
-    cfg.method      = 'fns';
-    cfg.conductivity= [0 conductivity.cond_value]; % revised by QL, 19.01.2016
-    cfg.tissueval   = [0:1:length(conductivity.cond_value)];
-    cfg.sens        = elec;
-    cfg.tissue      = [{'bd'},conductivity.tissuelabel];
-    cfg.mri         = mri_subject;  % in cm
-    vol = net_headmodel_fns(cfg.mri, 'tissue', cfg.tissue, 'tissueval', cfg.tissueval, 'tissuecond', cfg.conductivity, 'sens', cfg.sens);
+% elseif strcmpi(options_leadfield.method, 'fns')
+%     
+%     cfg=[];
+%     cfg.method      = 'fns';
+%     cfg.conductivity= [0 conductivity.cond_value]; % revised by QL, 19.01.2016
+%     cfg.tissueval   = [0:1:length(conductivity.cond_value)];
+%     cfg.sens        = elec;
+%     cfg.tissue      = [{'bd'},conductivity.tissuelabel];
+%     cfg.mri         = mri_subject;  % in cm
+%     vol = net_headmodel_fns(cfg.mri, 'tissue', cfg.tissue, 'tissueval', cfg.tissueval, 'tissuecond', cfg.conductivity, 'sens', cfg.sens);
     
     %%% ARDRM - ECM, 24/04/2017
 

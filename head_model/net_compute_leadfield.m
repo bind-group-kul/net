@@ -492,10 +492,10 @@ elseif iseeg
       % note that the electrode information is contained in the headmodel (thanks to ft_prepare_vol_sens)
       lf = net_leadfield_simbio(dippos, headmodel);
       
-    case 'fns'
-      % note that the electrode information is contained in the headmodel
-      % tolerance = 1e-8;
-      lf = leadfield_fns(dippos, headmodel);
+%     case 'fns'
+%       % note that the electrode information is contained in the headmodel
+%       % tolerance = 1e-8;
+%       lf = leadfield_fns(dippos, headmodel);
       
     case 'interpolate'
       % note that the electrode information is contained in the headmodel
