@@ -130,16 +130,11 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
             
             
             epoched_data = net_epoch(filtered_data,Fs_ref,events{iter_conditions},options_erp);
-            
             erp_data = net_robustaverage(epoched_data,n_range);
-            
             %figure; plot([options_erp.pretrig+1:options_erp.posttrig],erp_data'); xlabel('time (ms)'); ylabel('a.u.');
             
-            
             vox_indices=find(source.inside==1);
-            
             nvoxels=length(vox_indices);
-            
             xdim    = source.dim(1);
             ydim    = source.dim(2);
             zdim    = source.dim(3);
@@ -147,18 +142,14 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
             %mat=net_pos2transform(source.pos, source.dim);
             %res=abs(det(mat(1:3,1:3)))^(1/3);
             
-            
             pretrig   = round(Fs_ref*options_erp.pretrig/1000); % time in ms
             posttrig  = round(Fs_ref*options_erp.posttrig/1000);
-            
             
             erp_source_tcs=source.pca_projection*source.imagingkernel*erp_data;
             time_axis = [pretrig+1:posttrig]; % time in ms
             
             cc=corr(erp_source_tcs',erp_data');
-            
             vect=sign(max(cc,[],2)+min(cc,[],2));
-            
             erp_source_tcs=erp_source_tcs.*(vect*ones(1,size(erp_source_tcs,2)));
             
             % ==================================================
@@ -172,7 +163,7 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
             
             Ts = (1/Fs)*1000;
             lag_list = 0:Ts:posttrig;
-            time_num = length(lag_list);
+            time_num = length(lag_list)-1; % JS 09.2023, last lag goes beyond the trial
             
             for iter_t = 1:time_num
                 lag = lag_list(iter_t);
