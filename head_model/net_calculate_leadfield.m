@@ -20,7 +20,16 @@ end
 disp(['NET - Get vol with ' options_leadfield.method ' method...']);
 
 if strcmpi(options_leadfield.method, 'bemcp') || strcmpi(options_leadfield.method, 'dipoli') || strcmpi(options_leadfield.method, 'openmeeg')
-    
+    % JS 09.2023 - if MacOS, run dipoli; if Windows, run bemcp
+    opsys = detectOS;
+    options_leadfield.original_method = options_leadfield.method;
+    switch opsys
+        case 'macos'
+            options_leadfield.method = 'dipoli';
+        case 'windows'
+            options_leadfield.method = 'bemcp';
+    end
+    %
     cfg = [];
     cfg.tissue = lower(conductivity.tissuelabel);
     cfg.numvertices = [3000 2000 1000];
@@ -34,14 +43,15 @@ if strcmpi(options_leadfield.method, 'bemcp') || strcmpi(options_leadfield.metho
     end
     mri_bem = ft_convert_units(mri_bem, 'mm');
     vol = ft_prepare_mesh(cfg, mri_bem);
+    mri_ds = mri_bem; %JS 09.2023, because of mri_ds = ft_volumedownsample(cfg, mri_subject); in the other methods
    
     % create the BEM system matrix
     cfg = [];
     cfg.method       = options_leadfield.method ;
     cfg.conductivity = conductivity.cond_value;
     cfg.showcallinfo = 'no';
-    vol              = ft_prepare_headmodel(cfg, vol);  % in cm
-    
+    vol = ft_prepare_headmodel(cfg, vol);  % in cm
+
 elseif strcmpi(options_leadfield.method, 'simbio')
     tic
     % Create a hexahedral mesh..

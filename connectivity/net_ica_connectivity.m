@@ -54,7 +54,7 @@ if strcmp(options_ica.enable,'on')
     channel_data=net_filterdata(source.sensor_data,Fs,options_ica.highpass,options_ica.lowpass);
 
     %% if task data..
-    if length(options_ica.triggers) > 1 % .. data has to be epoched
+    if length(options_ica.triggers) > 1  && ~strcmpi(options_ica.triggers,'nan') % .. data has to be epoched
         triggers_template_file = [NET_folder filesep 'template' filesep 'triggers' filesep options_ica.triggers '.mat'];
         load(triggers_template_file, 'triggers');
         conditions_num = length(triggers);

@@ -81,10 +81,9 @@ D = badchannels(D, badchanind, 1);
 D.save;
 
 
-% filename = fname(D);
-% badchannel_filename = [path(D) filesep filename(1:end-4) '_badchannel.mat'];  % file name for bad channel..
-
-%save(badchannel_filename,'list_bch','list_bch2');
+filename = fname(D);
+badchannel_filename = [path(D) filesep filename(1:end-4) '_badchannel.mat'];  % file name for bad channel..
+save(badchannel_filename,'badchanind');
 
 
 if isempty(D.badchannels)

@@ -82,7 +82,7 @@ if strcmp(options_seed.map_enable,'on') || strcmp(options_seed.matrix_enable,'on
 
     %% if task data..
 
-    if length(options_ica.triggers) > 1 % .. data has to be epoched
+    if length(options_seed.triggers) > 1 && ~strcmpi(options_seed.triggers,'nan')% .. data has to be epoched
         triggers_template_file = [NET_folder filesep 'template' filesep 'triggers' filesep options_seed.triggers '.mat'];
         load(triggers_template_file, 'triggers');
         conditions_num = length(triggers);
@@ -149,6 +149,7 @@ if strcmp(options_seed.map_enable,'on') || strcmp(options_seed.matrix_enable,'on
     else % resting state data
         epoches.condition_name = 'resting';
         epoches.data = channel_data;
+        Fs_ref = 0;
     end
     %%
     

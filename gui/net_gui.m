@@ -744,7 +744,7 @@ function initialization(hObject, eventdata, handles)
         msgbox('MISSING REQUIRED DATA: EEG, Sensors position or Structural MRI filename. Check the input data to continue.');
         return
     end
-    if any(any(cellfun(@nopath,xlsdata(handles.subjects+1,:))))
+    if any(any(cellfun(@nopath,xlsdata(handles.subjects+1,1:4)))) % JS 09.2023
         msgbox('INPUT FILE(S) NOT FOUND. Check the input file paths to continue.');
         return
     end

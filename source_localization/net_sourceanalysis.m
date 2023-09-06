@@ -101,7 +101,7 @@ source = net_source_calc(data,cfg);
 source = ft_convert_units(source, 'mm');
 source.sensor_data=data.trial{1};
 source.elecpos=elecpos;
-source.events=D.triggers;
+source.events=events(D); %D.triggers; JS 08.2023 - otherwise triggers time is not copied
 
 pca_mat = zeros(Ndipoles,3*Ndipoles);
 

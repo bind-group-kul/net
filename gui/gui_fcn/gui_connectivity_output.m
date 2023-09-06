@@ -54,7 +54,8 @@ mainbox = uiextras.VBox('Parent',fig_output,'Padding',10*min(k));
             
             button_matrix = uicontrol('Parent',box_buttons,'Style','pushbutton','String','Plot',...
                 'FontName',fontname,'FontSize',fontsize,'Enable','Off','Callback',@show_matrix);
-            if exist([search_dir filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep 'matrix_connectivity.mat'],'file')
+            connmatrixname = dir([search_dir filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep '*' '_matrix_connectivity.mat']); % JS, 08.2023
+            if exist([ connmatrixname.folder filesep connmatrixname.name],'file')
                 set(button_matrix,'Enable','On');
             end
             
@@ -169,13 +170,12 @@ handles = guidata(gcbo);
 idx_dataset = get(handles.menu_visual_dataset,'String');
 idx_dataset = idx_dataset(get(handles.menu_visual_dataset,'Value'));
 
-% path  = '/Users/u0114283/Documents/PhD/Connectivity_pipelines/Processed_data/connectivity_spot3d_mrtim_gfdm_128/dataset';
 path = [handles.outdir filesep 'dataset'];
 
 idx_subj = idx_dataset{1}((length('Dataset ')+1):end); % remove string 'Dataset ', keep number
-conn_data = load([path idx_subj filesep 'eeg_source' filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep 'matrix_connectivity.mat']);
+connmatrixname = dir([path idx_subj filesep 'eeg_source' filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep '*' '_matrix_connectivity.mat']); % JS, 08.2023
+conn_data = load([ connmatrixname.folder filesep connmatrixname.name]);
 
-%nf    = 80;
 nseed = numel(conn_data.seed_info);
 seedname = {};
 for ns = 1:nseed
@@ -183,9 +183,6 @@ for ns = 1:nseed
     seedname{ns} = upper(strrep(seedname{ns},'_','-'));
 end
 
-%dmn   = 1:4; dan = 5:8; van = 9:10; lang = 11:12; mot = 13:17; vis = 18:21;
-%netw  = {dmn, dan, van, lang, mot, vis}; netwname = {'dmn','dan','van','lang','mot','vis'}; nnetw = numel(netw);
-%band = {1:4, 4:8, 8:13, 13:30, 30:80, 1:80};
 band = {1:4,4:8,8:13,13:30,30:80};
 bandname = {'Delta (1-4 Hz)','Theta (4-8 Hz)','Alpha (8-13 Hz)','Beta (13-30 Hz)','Gamma (30-80 Hz)'};
 nband = numel(band);
