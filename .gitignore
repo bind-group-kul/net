@@ -1,0 +1,5 @@
+# ignore the folders to be downloaded from osf.io
+external/
+template/
+test_data/
+
