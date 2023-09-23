@@ -1,9 +1,28 @@
 # NET
 Noninvasive Electrophysiology Toolbox
 
-After downloading the toolbox, unzip the files in \NET\template\tissues_MNI
+## Downloading
+Please clone the repository:
 
-run net_start_gui.m > run the toolbox through the GUI
-net_start_no_gui.m > run the toolbox through the main script (for programmers only)
+`git clone https://github.com/bind-group-kul/net.git`
 
-After choosing the destination folder, the excel files with the processing and analysis parameters will be automatically copied in that folder.
+Then download the additional tools and data from [osf.io](https://osf.io/jngwd/?view_only=0b776bad1bbb473ba839d8b5e7656be9) and copy them in the root of this repository.
+
+## Running
+Run the toolbox with the GUI:
+
+`net_start_gui.m`
+
+Run the toolbox through the main script (for programmers only):
+
+`net_start_no_gui.m`
+
+## Help
+Please follow the instructions in the guide `NET_User_tutorial.pdf`.
+
+## Authorship
+Copyright (C) 2023, Gaia Amaranta Taberna, Jessica Samogin,
+Dante Mantini
+
+Contributors: Mingqi Zhao, Marco Marino, Roberto Guarnieri,
+Ernesto Cuartas Morales, Marco Ganzetti, Quanying Liu
