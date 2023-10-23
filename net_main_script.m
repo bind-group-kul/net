@@ -15,23 +15,15 @@ catch
 end
 
 %% Read all the parameters in the processing_directory
-% fprintf('Select file (*.xlsx; *.xls) with datasets and parameters: \n');
-fprintf(['NET - Select processing directory containing the excel files: *_dataset.xlsx, *_parameters_prepro.xlsx, *_parameters_analysis.xlsx) \n']);
+pathx = [NET_folder filesep 'net_results'];
+if ~isdir(pathx)
+    mkdir(pathx);  % Create the output folder if it doesn't exist..
+end
 
-% [filename, pathname, filterindex] = uigetfile( ...
-%        {'*.xlsx','XLS-file (*.xlsx)'; ...
-%         '*.xls','XLS-file (*.xls)'}, ...
-%         'Pick a file', ...
-%         'MultiSelect', 'on');
+pathdata = [pathx filesep 'template_dataset.xlsx'];
+pathprepro = [pathx filesep 'template_parameters_prepro.xlsx'];
+pathanalysis = [pathx filesep 'template_parameters_analysis.xlsx'];
 
-pathx = uigetdir( ...
-       NET_folder,...
-       'NET - Select processing directory');
-
-dirname = strsplit(pathx,filesep);
-pathdata = [pathx filesep dirname{end} '_dataset.xlsx'];
-pathprepro = [pathx filesep dirname{end} '_parameters_prepro.xlsx'];
-pathanalysis = [pathx filesep dirname{end} '_parameters_analysis.xlsx'];
 if ~exist(pathdata)
     error('No dataset file in the selected directory! NET stops running.')
 elseif ~exist(pathprepro)
@@ -40,30 +32,16 @@ elseif ~exist(pathanalysis)
     error('No analysis parameters file in the selected directory! NET stops running.')
 end
 
-% pathx=[pathname filename];
-% if filterindex == 0
-%     error('No file selected! NET stops running.')
-% else
-%     fprintf(['\nSelected file: ' pathx '\nReading parameters...\n\n'])
-% end
-
 fprintf(['\nNET - Reading datasets... \nSelected file: ' pathdata '\n\n'])
 xls_data = net_read_data(pathdata);
 
 fprintf(['\nNET - Reading parameters...\nSelected files: ' pathprepro '\nand \n' pathanalysis '\n\n'])
-opt1 =net_gui_read_options(pathprepro,'prepro'); opt2 = net_gui_read_options(pathanalysis,'analysis');
+opt1 = net_gui_read_options(pathprepro,'prepro'); opt2 = net_gui_read_options(pathanalysis,'analysis');
 options = cell2struct([struct2cell(opt1);struct2cell(opt2)],[fieldnames(opt1);fieldnames(opt2)]); clear opt1 opt2
 
 
 %% Pre-processing data
 [dd2,ff2,ext]=fileparts(pathx);
-% pathy=[dd2 filesep ff2];
-% if ~isdir(pathy)
-%     mkdir(pathy);  % Create the output folder if it doesn't exist..
-%     disp(['NET - Generating output_folder: ' pathy]);
-% end
-
-% options.stats.subjects=[];
 nsubjs = size(xls_data,1);
       
 for subject_i = 1:nsubjs
@@ -200,7 +178,7 @@ for subject_i = 1:nsubjs
     if strcmp(xls_data(subject_i).connectivity_analysis, 'on')
         fprintf('\n*** CONNECTIVITY ANALYSIS: START... ***\n')
         %% ICA connectivity analysis
-        net_ica_connectivity_revised(source_filename,options.ica_conn);
+        net_ica_connectivity(source_filename,options.ica_conn);
         
         %% seed-based connectivity analysis
         net_seed_connectivity(source_filename,options.seeding);
