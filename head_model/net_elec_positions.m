@@ -11,17 +11,18 @@ sens = ft_read_sens(elecfile);
 sens = ft_convert_units(sens, 'mm');
 sens_label=sens.label;
 
-sens_label_corr=sens_label;
-for i=1:length(sens_label)    % only for Kirstin's BP recording
-    idx = strfind(sens_label{i},'_');
-    if not(isempty(idx))
-        sens_label_corr{i} = sens_label{i}(idx+1:end);
-    end
-end
-for i=1:length(sens_label)
-    sens_label_corr{i} = upper(sens_label_corr{i});
-end
-sens.label = sens_label_corr;
+% only for Kirstin's BP recording
+% sens_label_corr=sens_label;
+% for i=1:length(sens_label)    
+%     idx = strfind(sens_label{i},'_');
+%     if not(isempty(idx))
+%         sens_label_corr{i} = sens_label{i}(idx+1:end);
+%     end
+% end
+% for i=1:length(sens_label)
+%     sens_label_corr{i} = upper(sens_label_corr{i});
+% end
+% sens.label = sens_label_corr;
 
 for i=1:length(tpl_labels)
     tpl_labels{i} = upper(tpl_labels{i});
