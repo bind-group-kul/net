@@ -19,8 +19,6 @@ Cite as:
 
 %}
 
-%close all
-%clear all
 clc
 
 welcome_str = ([ ...
@@ -63,7 +61,14 @@ ss = get(0,'screensize');
 k = ss./[1 1 1440 900];
 k = k(3:4);
 fontsize = floor(10*k(2));
-fontname = 'Verdana'; %'Arial';
+if isunix && ~ismac % is Linux
+    fontname = 'Helvetica';
+elseif ismac || ispc % is Windows or MAC
+    fontname = 'Verdana';
+else
+    disp('Platform not supported')
+    return
+end
 handles.k = k;
 handles.fontsize = fontsize;
 handles.fontname = fontname;
@@ -957,7 +962,6 @@ for subject_i = handles.subjects
    
     %% detecting and Repairing the bad channels
     net_repair_badchannel(processedeeg_filename, options.badchannel_detection);
-    %   net_plotPSD(raweeg_filename,processedeeg_filename)
     
     %% filtering EEG data
     net_filtering(processedeeg_filename,options.filtering);
@@ -976,19 +980,15 @@ for subject_i = handles.subjects
     
     %% Ocular artifact attenuation using BSS
     net_ocular_correction_wKurt(processedeeg_filename, options.ocular_correction);
-    %net_plotPSD(raweeg_filename,processedeeg_filename)
     
     %% Movement artifact attenuation using BSS
     net_movement_correction_wSampEn(processedeeg_filename, options.mov_correction);
-    %net_plotPSD(raweeg_filename,processedeeg_filename)
     
     %% Myogenic artifact removal using BSS
     net_muscle_correction_gamma_ratio(processedeeg_filename, options.muscle_correction);
-    %net_plotPSD(raweeg_filename,processedeeg_filename)
     
     %% Cardiac artifact removal using BSS
     net_cardiac_correction_skew(processedeeg_filename, options.cardiac_correction);
-    %net_plotPSD(raweeg_filename,processedeeg_filename)
     
     %% De-spiking EEG data
     net_despiking(processedeeg_filename,options.despiking);
@@ -998,9 +998,6 @@ for subject_i = handles.subjects
     
     %% resampling EEG data for source localization
     net_resampling(processedeeg_filename,options.resampling_src);
-    % net_plotPSD(raweeg_filename,processedeeg_filename)
-    % saveas(gcf,[dd filesep 'psd.jpg'])
-    %close all
 
     handles.table_steps.sign_proc(subject_i,1) = 1;
     setappdata(handles.gui,'table_steps',handles.table_steps);

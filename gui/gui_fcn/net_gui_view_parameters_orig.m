@@ -1,12 +1,12 @@
 function handles = net_gui_view_parameters_orig(hObject, eventdata, handles)
 
-k=[1,1];
-fontsize = 13*k(2);
-fontname = 'Helvetica';
+% k=[1,1];
+% fontsize = 13*k(2);
+% fontname = 'Helvetica';
  
-% k = handles.k;
-% fontsize = handles.fontsize;
-% fontname = handles.fontname;
+k = handles.k;
+fontsize = handles.fontsize;
+fontname = handles.fontname;
 
 gui_data = figure('Units','Normalized','NumberTitle','Off','Name','View parameters',...
     'Menubar','none','WindowStyle','modal'); %'CloseRequestFcn','');
