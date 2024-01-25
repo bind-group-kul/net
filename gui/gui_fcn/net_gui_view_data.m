@@ -90,7 +90,7 @@ box_data = uiextras.HBox('Parent',box,'Spacing',10*min(k),'Padding',5*min(k));
     
 %     [~,xlsdescription] = xlsread(handles.input_filename,2);
 %     xlsdescription = xlsdescription(:,2);
-    xlsdescription = {'EEG recordings (accepted formats: *.eeg, *.mff, *.vhdr, *.vmrk, *.dat, *.raw)'; ...
+    xlsdescription = {'EEG recordings (accepted formats: *.eeg, *.mff, *.vhdr, *.set, *.dat, *.raw)'; ...
         'Trigger parameters (accepted format: *.csv)'; ...
         'List of recording sensors positions (accepted formats: *.sfp, *.elc)'; ...
         'T1-weighted structural MR image (accepted format: *.nii)'};
@@ -174,7 +174,7 @@ handles = guidata(gcbo);
     
     switch hObject.Tag
         case 'meeg'
-            ext = {'*.eeg; *.vhdr; *.vmrk; *.mff; *.cnt; *.dat; *.raw'}; % added some formats, JS 03.2023
+            ext = {'*.eeg; *.vhdr; *.mff; *.cnt; *.dat; *.raw; *.set'}; % added some formats, JS 03.2023
         case 'experiment'
             ext = {'*.csv'};
         case 'markers'
