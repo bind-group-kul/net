@@ -394,7 +394,7 @@ handles = guidata(gcbo);
         
         % Read number of datasets
         [~,xlsdata] = xlsread(handles.dataset_filename,1);
-        if any(cellfun(@nodata,xlsdata(:,1))) || any(cellfun(@nodata,xlsdata(:,3))) || any(cellfun(@nodata,xlsdata(:,4)))
+        if any(cellfun(@nodata,xlsdata(:,1))) || any(cellfun(@nodata,xlsdata(:,3))) %|| any(cellfun(@nodata,xlsdata(:,4)))
             handles.input_filename = handles.dataset_filename;
             handles = net_gui_view_data(hObject, eventdata, handles);
             msg = msgbox('MISSING REQUIRED DATA: EEG, Sensors position or Structural MRI filename');
@@ -402,6 +402,7 @@ handles = guidata(gcbo);
             %handles.dataset_data = getappdata(handles.gui,'dataset_data');
             delete(handles.gui_data);
         end
+
         num_dataset = size(xlsdata,1)-1;
         menu_str = {'Select sample dataset'};
         for n=1:num_dataset
@@ -900,24 +901,32 @@ for subject_i = handles.subjects
     end
     
     % HEAD MODELLING
-    
-    % remove image bias
-    net_preprocess_sMRI(img_filename_orig,anat_filename,tpm_filename);
-    
-    % perform tissue segmentation
-    net_segment_sMRI(img_filename,tpm_filename,options.sMRI);
-    
-    % creating tissue classes
-    net_tissues_sMRI(img_filename,tpm_filename,options.sMRI);
-    
-    % coregister electrodes to MRI
-    net_coregister_sensors(xls_data(subject_i).markerpos_filename,ddx,ddy,anat_filename,options.pos_convert);
-    
-    % calculate head model
-    net_calculate_leadfield(segimg_filename,elec_filename,options.leadfield);
 
-    handles.table_steps.head_model(subject_i,1) = 1;
-    setappdata(handles.gui,'table_steps',handles.table_steps);
+    if contains(xls_data(subject_i).anat_filename, 'mni_template.nii') % copy headmodel folder when using template Sensor position and MRI, JS 02.2024
+        copyfile([handles.net_path filesep 'template' filesep 'headmodels' filesep 'mr_data'], ddx)
+        [~,str] = fileparts(xls_data(subject_i).markerpos_filename);
+        hmd = dir([handles.net_path filesep 'template' filesep 'headmodels' filesep '**' filesep str]);
+        copyfile(hmd(1).folder, ddx)
+
+    else % otherwise calculate the headmodel
+        % remove image bias
+        net_preprocess_sMRI(img_filename_orig,anat_filename,tpm_filename);
+        
+        % perform tissue segmentation
+        net_segment_sMRI(img_filename,tpm_filename,options.sMRI);
+        
+        % creating tissue classes
+        net_tissues_sMRI(img_filename,tpm_filename,options.sMRI);
+        
+        % coregister electrodes to MRI
+        net_coregister_sensors(xls_data(subject_i).markerpos_filename,ddx,ddy,anat_filename,options.pos_convert);
+        
+        % calculate head model
+        net_calculate_leadfield(segimg_filename,elec_filename,options.leadfield);
+    
+        handles.table_steps.head_model(subject_i,1) = 1;
+        setappdata(handles.gui,'table_steps',handles.table_steps);
+    end
 
     fprintf(['\t** HEAD MODELLING: subject ' num2str(subject_i) ' DONE! **\n'])
 end

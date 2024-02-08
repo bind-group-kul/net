@@ -250,10 +250,44 @@ end                 % --- end remove_dataset
 function save_file(hObject, eventdata, handles)
 handles = guidata(gcbo);
 
-if any(cellfun(@nodata,handles.xls_data(:,1))) || any(cellfun(@nodata,handles.xls_data(:,3))) || any(cellfun(@nodata,handles.xls_data(:,4)))
-    msg = msgbox('Changes NOT saved! MISSING REQUIRED DATA: EEG, Sensors position or Structural MRI filename');
-else
-    
+if any(cellfun(@nodata,handles.xls_data(:,1))) || any(cellfun(@nodata,handles.xls_data(:,3))) || any(cellfun(@nodata,handles.xls_data(:,4))) % missing some input
+    if any(cellfun(@nodata,handles.xls_data(:,1))) || any(cellfun(@nodata,handles.xls_data(:,3))) % no EEG or sensor pos > do not continue
+        msg = msgbox('Changes NOT saved! MISSING REQUIRED DATA: EEG, Sensors position or Structural MRI filename');
+    else % no MRI > do not continue if individual sensor pos is used, JS 02.2024
+        for i = 1:numel(handles.xls_data(:,4))
+            sps = strsplit(handles.xls_data{i,3},'_');
+            if ~strcmpi(sps{end},'corr.sfp') % electrode position file is not in the template list
+                msg = msgbox('Changes NOT saved! MISSING MRI filename while SENSOR POSITION is not a template file. Please indicate the individual MRI filename or use a template Sensors position filename');
+            else % copy the template MRI when template electrodes are used (and no MRI is specified)
+                if isfield(handles,'flag_remove') && handles.flag_remove > 0
+                rmdir([handles.outdir filesep 'dataset' num2str(handles.flag_remove)],'s')
+                end
+                [~,xlsonoffdata] = xlsread(handles.input_filename,1,'E1:J1000'); % write 'on' to all steps to have the file ready for run_no_gui, JS 08.2023
+                xls_onoff = xlsonoffdata(1,:);
+                if size(xlsonoffdata,1)-1~=size(handles.xls_data,1) 
+                    tmp = cell(size(handles.xls_data,1),size(xlsonoffdata,2)); tmp(:) = {'on'};
+                    xlsonoffdata = tmp; 
+                else
+                    xlsonoffdata = xlsonoffdata(2:end,:);
+                end
+                handles.xls_data{i,4} = [handles.net_path filesep 'template' filesep 'tissues_MNI' filesep 'mni_template.nii'];
+                new_data = table([handles.xls_names xls_onoff; handles.xls_data, xlsonoffdata]);
+                if exist(handles.dataset_filename,'file')
+                    delete(handles.dataset_filename)
+                end
+                writetable(new_data,handles.dataset_filename,'WriteVariableNames',false,'Sheet',1);
+                handles.dataset_data = new_data;
+                
+                if ~any(cellfun(@nodata,handles.xls_data(:,4)))
+                setappdata(handles.gui,'dataset_data',handles.xls_data);
+
+                guidata(gcbo,handles)
+                uiresume;
+                end
+            end
+        end
+    end
+else % all inputs have been correctly specified
     if isfield(handles,'flag_remove') && handles.flag_remove > 0
         rmdir([handles.outdir filesep 'dataset' num2str(handles.flag_remove)],'s')
     end
@@ -272,7 +306,7 @@ else
     writetable(new_data,handles.dataset_filename,'WriteVariableNames',false,'Sheet',1);
     handles.dataset_data = new_data;
     %setappdata(handles.gui,'dataset_data',handles.dataset_data);
-    
+        
     setappdata(handles.gui,'dataset_data',handles.xls_data);
     %     num_dataset = size(handles.xls_data,1);
     %     menu_str = {'Select sample dataset'};
@@ -281,7 +315,7 @@ else
     %     end
     %     set(handles.menu_sample_dataset,'Value',1)
     %     set(handles.menu_sample_dataset,'String',menu_str)
-    
+        
     guidata(gcbo,handles)
     uiresume;
 end

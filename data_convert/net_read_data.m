@@ -31,7 +31,14 @@ for subject_i = subjects % modified subject_i = 1:nsubjs    % GT 03.22
 
         disp(['subject' num2str(subject_i) ' : no MR anatomy file.'])
     end
-        
+    else % MRI not specified, JS 02.2024
+        sps = strsplit(xls_data(subject_i).markerpos_filename,'_');
+        if ~strcmpi(sps{end},'corr.sfp') % no template electrode position
+            disp(['subject' num2str(subject_i) ' : individual electrode file but no individual MR anatomy file.'])
+        else % template electrode position and MRI
+            xls_data(subject_i).anat_filename = [net('path') filesep 'template' filesep 'tissues_MNI' filesep 'mni_template.nii'];
+            writetable(struct2table(xls_data),pathx,'WriteVariableNames',true,'Sheet',1);
+        end
     end
     
     %check field of external events file, added by MZ, 11.Dec.2017

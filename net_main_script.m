@@ -96,6 +96,14 @@ for subject_i = 1:nsubjs
     
     if strcmp(xls_data(subject_i).head_modelling, 'on')
         fprintf('\n*** HEAD MODELLING: START... ***\n')
+        if contains(anat_filename, 'mni_template.nii') % copy headmodel folder when using template Sensor position and MRI, JS 02.2024
+            copyfile([NET_folder filesep 'template' filesep 'headmodels' filesep 'mr_data'], ddx)
+            [~,str] = fileparts(xls_data(subject_i).markerpos_filename);
+            hmd = dir([NET_folder filesep 'template' filesep 'headmodels' filesep '**' filesep str]);
+            copyfile(hmd(1).folder, ddx)
+
+        else % otherwise calculate the headmodel
+
         %% remove image bias
          net_preprocess_sMRI(img_filename_orig,anat_filename,tpm_filename);
          
@@ -110,6 +118,7 @@ for subject_i = 1:nsubjs
         
         %% calculate head model
          net_calculate_leadfield(segimg_filename,elec_filename,options.leadfield);
+        end
         fprintf('\n*** HEAD MODELLING: DONE! ***\n')
     end
   
