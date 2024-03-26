@@ -4,7 +4,10 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
     
     fprintf('\t** ERP analyses started... **\n')
     %% 1. load source, common code calculation
-    
+    f = waitbar(0,'ERP analysis...');
+    tmp = strsplit(source_filename,filesep); subject_info = tmp{end-2};
+    f.Name = ['Dataset ' subject_info(8:end) ' - ERP ANALYSIS']; clear tmp
+
     n_range=3;
     NET_folder = net('path');
     ddx=fileparts(fileparts(source_filename));
@@ -13,6 +16,7 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
     deformation_to_subj=[ddx filesep 'mr_data' filesep 'y_anatomy_prepro.nii'];
     fprintf(['\nNET ERP: ', dataset_info, '\n']);
     
+    waitbar(.05,f,'...read triggers (1/4)');
     if(strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on')) %% load things only for source level
         signal_file = [ddx, filesep, 'eeg_signal', filesep, 'processed_eeg.mat'];
         signal_d = spm_eeg_load(signal_file);
@@ -75,7 +79,19 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
             empty_condition_index = [empty_condition_index iter_conditions];
             disp(['NET ERP: condition ', triggers(iter_conditions).condition_name, ' cannot be found across all the events, please check your triggers template or your experiment!']);
         end
+    end    
+    for iter_conditions = 1:1:conditions_num
+        if isempty(events{iter_conditions})
+            emp(iter_conditions) = 1;
+        end
     end
+    if exist('emp','var')
+        if sum(emp) == conditions_num
+        disp('No condition can be found in any event. ERP analysis not performed.')
+        return
+        end
+    end
+
     %delete empty conditions, and update conditions infomation
     events(empty_condition_index) = [];
     triggers(empty_condition_index) = [];
@@ -83,12 +99,17 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
     
     %% 3. ERP in sensor space
     if strcmp(options_erp.sensor_enable,'on')
+    waitbar(.25,f,'...ERP - sensor space (2/4)');
+
         disp(['NET ERP: ', dataset_info, ': processing ERP in sensor space...']);
         dd2=[ddx filesep 'eeg_signal' filesep 'erp_results'];
         if ~isdir(dd2)
             mkdir(dd2);  % Create the output folder if it doesn't exist..
         end
+        
+        bar_len  = 0;
         for iter_conditions = 1:1:conditions_num
+            tic;
             options_erp.pretrig = triggers(iter_conditions).pretrig;
             options_erp.posttrig = triggers(iter_conditions).posttrig;
             options_erp.baseline = triggers(iter_conditions).baseline;
@@ -109,6 +130,9 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
             erp_sensor(iter_conditions).erp_tc = erp_tc;
             erp_sensor(iter_conditions).label = elec_labels;
             erp_sensor(iter_conditions).trials = epoched_data;
+            t = toc;
+            bar_len = net_progress_bar_t(['NET ERP: ', subject_info, ': calculate sensors ERP', ], iter_conditions, conditions_num, t, bar_len);
+
         end       
         save([dd2 filesep 'erp_timecourses_sensor.mat'],'erp_sensor','elecpos', 'triggers','events', 'voltage_units', 'time_unit', 'events_all');
     end
@@ -116,6 +140,8 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
     
     %% ERP in source space
     if strcmp(options_erp.mapping_enable,'on')
+    waitbar(.5,f,'...ERP - source maps (3/4)');
+        
         disp(['NET ERP: ', dataset_info, ': processing ERP in source space...']);
         dd2=[dd filesep 'erp_results']; 
         if ~isdir(dd2)
@@ -193,6 +219,8 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
     
     %% ERP in ROIs
     if strcmp(options_erp.roi_enable,'on')
+    waitbar(.75,f,'...ERP - regions of interest (4/4)');
+
         disp(['NET ERP: ', dataset_info, ': processing ERP in ROIs']);
         dd2=[dd filesep 'erp_results']; 
         if ~isdir(dd2)
@@ -204,7 +232,9 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
         radius=6;
         
         nrois=length(seed_info);
+        bar_len  = 0;
         for i=1:nrois
+            tic;
             seed_info(i).coord_subj=net_project_coord(deformation_to_subj,seed_info(i).coord_mni);
             dist = pdist2(xyz',seed_info(i).coord_subj);
             voxel_list=find(dist<radius);
@@ -213,6 +243,8 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
                 disp(['please check seed ' num2str(i)]);
             end
             seed_info(i).seedindx=voxel_list;
+            t = toc;
+            bar_len = net_progress_bar_t(['NET ERP: ', subject_info, ': find individual ROI coordinates', ], i, nrois, t, bar_len);
         end
         
         
@@ -228,19 +260,15 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
             erp_data = net_robustaverage(epoched_data,n_range);
             
             %figure; plot([options_erp.pretrig+1:options_erp.posttrig],erp_data'); xlabel('time (ms)'); ylabel('a.u.');
-            
-            %
-            
             %mat=net_pos2transform(source.pos, source.dim);
             %res=abs(det(mat(1:3,1:3)))^(1/3);
-            
             
             pretrig   = round(Fs_ref*options_erp.pretrig/1000);
             posttrig  = round(Fs_ref*options_erp.posttrig/1000);
             
-            
+            bar_len = 0;
             for i=1:nrois
-                
+                tic;
                 mat=source.pca_projection(seed_info(i).seedindx,:)*source.imagingkernel*erp_data;
                 [~,score]=pca(mat');
                 cc=corr(score(-pretrig+1:posttrig-pretrig,1),erp_data(:,-pretrig+1:posttrig-pretrig)');
@@ -250,12 +278,15 @@ if( strcmp(options_erp.mapping_enable,'on') || strcmp(options_erp.roi_enable,'on
                 erp_roi(iter_conditions).time_axis = [pretrig+1:posttrig];
                 erp_roi(iter_conditions).erp_tc(i,:) = erp_tc;
                 erp_roi(iter_conditions).label{i} = seed_info(i).label;
+                t = toc;
+                bar_len = net_progress_bar_t(['Condition ' num2str(iter_conditions) ': ', subject_info, ': calculate ROI ERP', ], i, nrois, t, bar_len);
             end
             
         end
         
         save([dd2 filesep 'erp_timecourses_roi.mat'],'erp_roi','triggers', 'seed_info', 'events', 'voltage_units', 'time_unit');
     end
+    close(f)
     fprintf('\t** ERP analyses done! **\n')
 else
     fprintf('No ERP analyses to run.\n')

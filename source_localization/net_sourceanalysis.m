@@ -1,6 +1,11 @@
 function  source=net_sourceanalysis(eeg_filename,headmodel_filename,source_filename,options_source)
+f = waitbar(0,'Source localization...');
+tmp = strsplit(source_filename,filesep); tmp = tmp{end-2};
+f.Name = ['Dataset ' tmp(8:end) ' - SOURCE LOCALIZATION']; clear tmp
 
 NET_folder=net('path');
+
+waitbar(.1,f,'...load data (1/3)');
 
 D = spm_eeg_load(eeg_filename);
 
@@ -74,7 +79,6 @@ end
 
 % --------------------------------------------------------------
 % 1. Load EEG file, volume conduction model file and leadfield file
-
 % --------------------------------------------------------------
 % 2. Set the parameters for source localisation
 data          = spm2fieldtrip(D);
@@ -103,6 +107,7 @@ source.sensor_data=data.trial{1};
 source.elecpos=elecpos;
 source.events=events(D); %D.triggers; JS 08.2023 - otherwise triggers time is not copied
 
+waitbar(.3,f,'...PCA decomposition (2/3)');
 pca_mat = zeros(Ndipoles,3*Ndipoles);
 
 bar_len = 0;
@@ -120,6 +125,7 @@ end
 source.pca_projection=pca_mat;
 
 if strcmpi(options_source.mni_initialize,'yes')
+waitbar(.25,f,'...mask extraction (3/3)');
 
 %% generate trasnformation to MNI space
 Vt.dim      = headmodel.leadfield.dim;
@@ -205,6 +211,5 @@ source.pos_mni=xyz';
 source.spatial_filter_mni=mat';
 
 end
-
 save(source_filename, '-v7.3','source');  % to save the matrix bigger than 2GB, added by QL, 04.12.2014
-
+close(f)

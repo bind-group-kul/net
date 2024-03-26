@@ -5,6 +5,10 @@ function net_ers_erd_analysis(source_filename, options_ers_erd)
 if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_enable, 'on') || strcmp(options_ers_erd.sensor_enable, 'on')) 
     
     fprintf('\t** ERS/ERD analyses started... **\n')
+    f = waitbar(0,'ERS/ERD analysis...');
+    tmp = strsplit(source_filename,filesep); subject_info = tmp{end-2};
+    f.Name = ['Dataset ' subject_info(8:end) ' - ERS/ERD ANALYSIS']; clear tmp
+
     smooth = 'on';
     %% 1. load source, common code for mapping and roi
     NET_folder = net('path');
@@ -14,7 +18,8 @@ if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_en
     deformation_to_mni=[ddx filesep 'mr_data' filesep 'iy_anatomy_prepro.nii'];
     deformation_to_subj=[ddx filesep 'mr_data' filesep 'y_anatomy_prepro.nii'];
     %tpmref_filename=[NET_folder filesep 'template' filesep 'tissues_MNI' filesep 'eTPM6.nii'];
-    
+
+    waitbar(.05,f,'...read triggers (1/4)');
     if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_enable, 'on'))
         load(source_filename, 'source');
         [dd,ff,ext]=fileparts(source_filename);
@@ -81,6 +86,18 @@ if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_en
             fprintf([dataset_info,': NET ERS/ERD: condition ''', triggers(iter_conditions).condition_name, ''' cannot be found across all the events, please check your triggers template or your experiment!\n']);
         end
     end
+    for iter_conditions = 1:1:conditions_num
+        if isempty(events{iter_conditions})
+            emp(iter_conditions) = 1;
+        end
+    end
+    if exist('emp','var')
+        if sum(emp) == conditions_num
+        disp('No condition can be found in any event. ERS/ERD analysis not performed.')
+        return
+        end
+    end
+
     %delete empty conditions, and update conditions infomation
     events(empty_condition_index) = [];
     triggers(empty_condition_index) = [];
@@ -88,7 +105,8 @@ if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_en
   
   %% 3. erd/ers sensor topogram
     if(strcmp(options_ers_erd.sensor_enable,'on'))
-         
+    waitbar(.25,f,'...ERS/ERD - sensor space (2/4)');
+     
         dd2=[ddx filesep 'eeg_signal' filesep 'ers_erd_results'];
         if ~isdir(dd2)
             mkdir(dd2);
@@ -127,6 +145,8 @@ if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_en
     
     %% 4. ers_erd.mapping. This part can be very time consuming!
     if(strcmp(options_ers_erd.mapping_enable,'on'))
+    waitbar(.5,f,'...ERS/ERD - source maps (3/4)');
+        
         dd2=[dd filesep 'ers_erd_results'];
         if ~isdir(dd2)
             mkdir(dd2);
@@ -227,6 +247,8 @@ if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_en
     
     %% 5. ers_erd.roi
     if strcmp(options_ers_erd.roi_enable,'on')
+    waitbar(.75,f,'...ERS/ERD - regions of interest (4/4)');
+
         dd2=[dd filesep 'ers_erd_results'];
         if ~isdir(dd2)
             mkdir(dd2);
@@ -306,6 +328,7 @@ if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_en
         triggers=triggers(1);
         save([dd2 filesep 'ers_erd_roi.mat'],'ers_erd_roi','triggers', 'seed_info','events', 'time_unit'); %save triggers rather than options_ers_erd
     end
+    close(f)
     fprintf('\t** ERS/ERD analyses done! **\n')
 else
     fprintf('No ERS/ERD analyses to run.\n')

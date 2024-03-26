@@ -84,19 +84,32 @@ for subject_i = 1:nsubjs
 
     %% data conversion and processing
     if strcmp(xls_data(subject_i).conversion, 'on')
+        fprintf('\n*** DATA CONVERSION: START... ***\n')
+        f = waitbar(0,'Data conversion...');
+        f.Name = ['Dataset ' num2str(subject_i) ' - DATA CONVERSION'];
+
         %% Initialize structural MR image 
+        waitbar(.2,f,'...MR data (1/3)');
         net_initialize_mri(xls_data(subject_i).anat_filename,[ddx filesep 'anatomy.nii']);
         
         %% Convert raw EEG data to SPM format
+        waitbar(.4,f,'...EEG data (2/3)');
         net_initialize_eeg(xls_data(subject_i).eeg_filename,xls_data(subject_i).experiment_filename,raweeg_filename,options.eeg_convert,options.pos_convert);
         
         %% initializing the preprocessed EEG file
+        waitbar(.9,f,'...EEG data (3/3)');
         net_eegprepro_initialize(raweeg_filename, processedeeg_filename);
+        
+        close(f)
+        fprintf('\n*** DATA CONVERSION: DONE! ***\n')
     end
     
     if strcmp(xls_data(subject_i).head_modelling, 'on')
         fprintf('\n*** HEAD MODELLING: START... ***\n')
-        if contains(anat_filename, 'mni_template.nii') % copy headmodel folder when using template Sensor position and MRI, JS 02.2024
+        f = waitbar(0,'Head modelling...');
+        f.Name = ['Dataset ' num2str(subject_i) ' - HEAD MODELLING'];
+
+        if contains(xls_data(subject_i).anat_filename, 'mni_template.nii') % copy headmodel folder when using template Sensor position and MRI, JS 02.2024
             copyfile([NET_folder filesep 'template' filesep 'headmodels' filesep 'mr_data'], ddx)
             [~,str] = fileparts(xls_data(subject_i).markerpos_filename);
             hmd = dir([NET_folder filesep 'template' filesep 'headmodels' filesep '**' filesep str]);
@@ -105,64 +118,86 @@ for subject_i = 1:nsubjs
         else % otherwise calculate the headmodel
 
         %% remove image bias
-         net_preprocess_sMRI(img_filename_orig,anat_filename,tpm_filename);
+        waitbar(.05,f,'...MRI preprocessing (1/4)'); 
+        net_preprocess_sMRI(img_filename_orig,anat_filename,tpm_filename);
          
         %% perform tissue segmentation
-         net_segment_sMRI(img_filename,tpm_filename,options.sMRI);
+        waitbar(.23,f,'...MRI segmentation (2/4)');
+        net_segment_sMRI(img_filename,tpm_filename,options.sMRI);
 
         %% creating tissue classes
-         net_tissues_sMRI(img_filename,tpm_filename,options.sMRI);
+        net_tissues_sMRI(img_filename,tpm_filename,options.sMRI);
 
         %% coregister electrodes to MRI
+        waitbar(.52,f,'...electrodes coregistration (3/4)');
         net_coregister_sensors(xls_data(subject_i).markerpos_filename,ddx,ddy,anat_filename,options.pos_convert);
         
         %% calculate head model
-         net_calculate_leadfield(segimg_filename,elec_filename,options.leadfield);
+        waitbar(.55,f,'...headmodel computation (4/4)');
+        net_calculate_leadfield(segimg_filename,elec_filename,options.leadfield);
         end
+        
+        close(f)
         fprintf('\n*** HEAD MODELLING: DONE! ***\n')
     end
   
     if strcmp(xls_data(subject_i).signal_processing, 'on')
         fprintf('\n*** SIGNAL PROCESSING: START... ***\n')
+        f = waitbar(0,'Signal processing...');
+        f.Name = ['Dataset ' num2str(subject_i) ' - SIGNAL PROCESSING'];
+
         %% NET - Detecting and Repairing the bad channels    
+        waitbar(.05,f,'...bad channel detection (1/12)');
         net_repair_badchannel(processedeeg_filename, options.badchannel_detection);
 
         %% filtering EEG data
+        waitbar(.15,f,'...EEG filtering (2/12)');
         net_filtering(processedeeg_filename,options.filtering);
         
         %% Attenuating fMRI gradient artifacts (for EEG/fMRI data only)
+        waitbar(.17,f,'...fMRI gradient artefact attenuation (3/12)');
         net_rmMRIartifact(processedeeg_filename, options.fmri_artifacts);
         
         %% Attenuating BCG artifacts (for EEG/fMRI data only)
+        waitbar(.2,f,'...BCG artefact attenuation (4/12)');
         net_rmBCGartifact(processedeeg_filename, options.bcg_artifacts);
         
         %% filtering EEG data
         net_filtering(processedeeg_filename,options.filtering);
         
-        %% resampling EEG data for artifact removal
+        %% resampling EEG data for artifact correction
+        waitbar(.25,f,'...EEG resampling (5/12)');
         net_resampling(processedeeg_filename,options.resampling_bss);
         
         %% Ocular artifact attenuation using BSS
+        waitbar(.3,f,'...ocular artefact attenuation (6/12)');
         net_ocular_correction_wKurt(processedeeg_filename, options.ocular_correction);
         
         %% Movement artifact attenuation using BSS
+        waitbar(.4,f,'...movement artefact attenuation (7/12)');
         net_movement_correction_wSampEn(processedeeg_filename, options.mov_correction);
         
-        %% Myogenic artifact removal using BSS
+        %% Myogenic artifact attenuation using BSS
+        waitbar(.5,f,'...myogenic artefact attenuation (8/12)');
         net_muscle_correction_gamma_ratio(processedeeg_filename, options.muscle_correction);
         
-        %% Cardiac artifact removal using BSS
+        %% Cardiac artifact attenuation using BSS
+        waitbar(.6,f,'...cardiac artefact attenuation (9/12)');
         net_cardiac_correction_skew(processedeeg_filename, options.cardiac_correction);
         
         %% De-spiking EEG data
+        waitbar(.7,f,'...EEG despiking (10/12)');
         net_despiking(processedeeg_filename,options.despiking);
         
         %% Re-referencing EEG data
+        waitbar(.8,f,'...EEG re-referencing (11/12)');
         net_reference(processedeeg_filename,options.reference);
         
         %% resampling EEG data for source localization
+        waitbar(.9,f,'...EEG resampling (12/12)');
         net_resampling(processedeeg_filename,options.resampling_src);
 
+        close(f)
         fprintf('\n*** SIGNAL PROCESSING: DONE! ***\n')
     end
    

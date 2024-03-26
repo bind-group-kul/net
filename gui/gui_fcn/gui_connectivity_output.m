@@ -173,7 +173,7 @@ idx_dataset = idx_dataset(get(handles.menu_visual_dataset,'Value'));
 path = [handles.outdir filesep 'dataset'];
 
 idx_subj = idx_dataset{1}((length('Dataset ')+1):end); % remove string 'Dataset ', keep number
-connmatrixname = dir([path idx_subj filesep 'eeg_source' filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep '*' '_matrix_connectivity.mat']); % JS, 08.2023
+connmatrixname = dir([path idx_subj filesep 'eeg_source' filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep '*' 'matrix_connectivity.mat']); % JS, 08.2023
 conn_data = load([ connmatrixname.folder filesep connmatrixname.name]);
 
 nseed = numel(conn_data.seed_info);

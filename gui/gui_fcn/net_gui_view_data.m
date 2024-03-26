@@ -254,8 +254,10 @@ if any(cellfun(@nodata,handles.xls_data(:,1))) || any(cellfun(@nodata,handles.xl
     if any(cellfun(@nodata,handles.xls_data(:,1))) || any(cellfun(@nodata,handles.xls_data(:,3))) % no EEG or sensor pos > do not continue
         msg = msgbox('Changes NOT saved! MISSING REQUIRED DATA: EEG, Sensors position or Structural MRI filename');
     else % no MRI > do not continue if individual sensor pos is used, JS 02.2024
-        for i = 1:numel(handles.xls_data(:,4))
-            sps = strsplit(handles.xls_data{i,3},'_');
+        indx = cellfun(@nodata,handles.xls_data(:,4));
+        nomri = find(indx>0);
+        for i = 1:sum(indx) %numel(handles.xls_data(:,4))
+            sps = strsplit(handles.xls_data{nomri(i),3},'_');
             if ~strcmpi(sps{end},'corr.sfp') % electrode position file is not in the template list
                 msg = msgbox('Changes NOT saved! MISSING MRI filename while SENSOR POSITION is not a template file. Please indicate the individual MRI filename or use a template Sensors position filename');
             else % copy the template MRI when template electrodes are used (and no MRI is specified)
@@ -270,7 +272,7 @@ if any(cellfun(@nodata,handles.xls_data(:,1))) || any(cellfun(@nodata,handles.xl
                 else
                     xlsonoffdata = xlsonoffdata(2:end,:);
                 end
-                handles.xls_data{i,4} = [handles.net_path filesep 'template' filesep 'tissues_MNI' filesep 'mni_template.nii'];
+                handles.xls_data{nomri(i),4} = [handles.net_path filesep 'template' filesep 'tissues_MNI' filesep 'mni_template.nii'];
                 new_data = table([handles.xls_names xls_onoff; handles.xls_data, xlsonoffdata]);
                 if exist(handles.dataset_filename,'file')
                     delete(handles.dataset_filename)

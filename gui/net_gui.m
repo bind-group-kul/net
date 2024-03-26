@@ -882,7 +882,9 @@ xls_data = handles.datasets;
 options = handles.parameters;
 
 for subject_i = handles.subjects
-    
+    f = waitbar(0,'Head modelling...');
+    f.Name = ['Dataset ' num2str(subject_i) ' - HEAD MODELLING'];
+
     % initialize filenames
     NET_folder = handles.net_path;
     folderpaths = getappdata(handles.gui,'folderpaths');
@@ -892,6 +894,8 @@ for subject_i = handles.subjects
     ddz = folderpaths.eeg_source;
     net_initialize_filenames;
     
+    waitbar(.01,f,'...data initialization (1/5)');
+
     % Initialize structural MR image
     net_initialize_mri(xls_data(subject_i).anat_filename,[ddx filesep 'anatomy.nii']);
 
@@ -910,30 +914,36 @@ for subject_i = handles.subjects
 
     else % otherwise calculate the headmodel
         % remove image bias
+        waitbar(.05,f,'...MRI preprocessing (2/5)');
         net_preprocess_sMRI(img_filename_orig,anat_filename,tpm_filename);
-        
+
         % perform tissue segmentation
+        waitbar(.23,f,'...MRI segmentation (3/5)');
         net_segment_sMRI(img_filename,tpm_filename,options.sMRI);
-        
+
         % creating tissue classes
         net_tissues_sMRI(img_filename,tpm_filename,options.sMRI);
-        
+
         % coregister electrodes to MRI
+        waitbar(0.52,f,'...electrodes coregistration (4/5)');
         net_coregister_sensors(xls_data(subject_i).markerpos_filename,ddx,ddy,anat_filename,options.pos_convert);
-        
+
         % calculate head model
+        waitbar(0.55,f,'...headmodel computation (5/5)');
         net_calculate_leadfield(segimg_filename,elec_filename,options.leadfield);
-    
+
         handles.table_steps.head_model(subject_i,1) = 1;
         setappdata(handles.gui,'table_steps',handles.table_steps);
+        
     end
-
+    close(f)
     fprintf(['\t** HEAD MODELLING: subject ' num2str(subject_i) ' DONE! **\n'])
 end
     fprintf('\n*** HEAD MODELLING: DONE! ***\n')
     guidata(handles.gui,handles)
     if ~strcmp(handles.buttons_select_run.SelectedObject.Tag,'run_auto')
         fprintf('\n*** END OF PROCESSING. ***\n')
+
         initialization(hObject, eventdata, handles) % GAIA 13.05
         check_status_visual(hObject, eventdata, handles)
     end
@@ -949,6 +959,9 @@ fprintf('\n*** SIGNAL PROCESSING: START... ***\n')
 xls_data = handles.datasets;
 options = handles.parameters;
 for subject_i = handles.subjects
+    f = waitbar(0,'Signal processing...');
+    f.Name = ['Dataset ' num2str(subject_i) ' - SIGNAL PROCESSING'];
+
     %% initialize filenames
     NET_folder = handles.net_path;
     folderpaths = getappdata(handles.gui,'folderpaths');
@@ -961,6 +974,7 @@ for subject_i = handles.subjects
     % Convert raw EEG data to SPM format, if using the same headmodel for
     % all participants
     if ~(exist(raweeg_filename)==2)
+        waitbar(.1,f,'...data initialization (1/14)');
         net_initialize_eeg(xls_data(subject_i).eeg_filename,xls_data(subject_i).experiment_filename,raweeg_filename,options.eeg_convert,options.pos_convert);
     end
     
@@ -970,47 +984,60 @@ for subject_i = handles.subjects
     %% SIGNAL PRE-PROCESSING
    
     %% detecting and Repairing the bad channels
+    waitbar(.1,f,'...bad channel detection (2/14)');
     net_repair_badchannel(processedeeg_filename, options.badchannel_detection);
     
     %% filtering EEG data
+    waitbar(.25,f,'...EEG filtering (3/14)');
     net_filtering(processedeeg_filename,options.filtering);
     
     %% Attenuating fMRI gradient artifacts (for EEG/fMRI data only)
+    waitbar(.3,f,'...fMRI gradient artefact attenuation (4/14)');
     net_rmMRIartifact(processedeeg_filename, options.fmri_artifacts);
     
     %% Attenuating BCG artifacts (for EEG/fMRI data only)
+    waitbar(.35,f,'...BCG artefact attenuation (5/14)');
     net_rmBCGartifact(processedeeg_filename, options.bcg_artifacts);
     
     %% filtering EEG data
     net_filtering(processedeeg_filename,options.filtering);
     
-    %% resampling EEG data for artifact removal
+    %% resampling EEG data for artifact correction
+    waitbar(.4,f,'...EEG resampling (7/14)');
     net_resampling(processedeeg_filename,options.resampling_bss);
     
     %% Ocular artifact attenuation using BSS
+    waitbar(.41,f,'...ocular artefact attenuation (8/14)');
     net_ocular_correction_wKurt(processedeeg_filename, options.ocular_correction);
     
     %% Movement artifact attenuation using BSS
+    waitbar(.51,f,'...movement artefact attenuation (9/14)');
     net_movement_correction_wSampEn(processedeeg_filename, options.mov_correction);
     
-    %% Myogenic artifact removal using BSS
+    %% Myogenic artifact attenuation using BSS
+    waitbar(.61,f,'...myogenic artefact attenuation (10/14)');
     net_muscle_correction_gamma_ratio(processedeeg_filename, options.muscle_correction);
     
-    %% Cardiac artifact removal using BSS
+    %% Cardiac artifact attenuation using BSS
+    waitbar(.71,f,'...cardiac artefact attenuation (11/14)');
     net_cardiac_correction_skew(processedeeg_filename, options.cardiac_correction);
     
-    %% De-spiking EEG data
+    %% Despiking EEG data
+    waitbar(.8,f,'...EEG despiking (12/14)');
     net_despiking(processedeeg_filename,options.despiking);
     
     %% Re-referencing EEG data
+    waitbar(.9,f,'...EEG re-referencing (13/14)');
     net_reference(processedeeg_filename,options.reference);
     
     %% resampling EEG data for source localization
+    waitbar(.95,f,'...EEG resampling (14/14)');
     net_resampling(processedeeg_filename,options.resampling_src);
 
     handles.table_steps.sign_proc(subject_i,1) = 1;
     setappdata(handles.gui,'table_steps',handles.table_steps);
 
+    close(f)
     fprintf('\n*** SIGNAL PROCESSING: DONE! ***\n')
 end
 
@@ -1046,7 +1073,6 @@ for subject_i = handles.subjects
 
     handles.table_steps.source_loc(subject_i,1) = 1;
     setappdata(handles.gui,'table_steps',handles.table_steps);
-
     fprintf('\n*** SOURCE LOCALIZATION: DONE! ***\n')
 end
 
@@ -1082,13 +1108,13 @@ if any(strcmpi(struct2cell(options.erp),'on')) || any(strcmpi(struct2cell(option
         
         %% ERP analysis
         net_erp_analysis(source_filename,options.erp);
-        
+
         %% ERS/ERD analysis
         net_ers_erd_analysis(source_filename,options.ers_erd);
         
         handles.table_steps.activity(subject_i,1) = 1;
         setappdata(handles.gui,'table_steps',handles.table_steps);
-        
+
         fprintf('\n*** ACTIVITY ANALYSIS: DONE! ***\n')
     end
 else
@@ -1125,13 +1151,12 @@ if any(strcmpi(struct2cell(options.ica_conn),'on')) || any(strcmpi(struct2cell(o
         
         %% ICA connectivity analysis
         net_ica_connectivity(source_filename,options.ica_conn);
-        
+
         %% seed-based connectivity analysis
         net_seed_connectivity(source_filename,options.seeding);
         
         handles.table_steps.connectivity(subject_i,1) = 1;
         setappdata(handles.gui,'table_steps',handles.table_steps);
-        
         fprintf('\n*** CONNECTIVITY ANALYSIS: DONE! ***\n')
     end
 else
@@ -1234,7 +1259,7 @@ handles = guidata(gcbo);
     str_menu_visual = get(handles.menu_visual_dataset,'String');
     if strcmpi(str_menu_visual(get(handles.menu_visual_dataset,'Value')),'Group')
     	%set(handles.visual_statistics,'Enable','On');
-        search_dir = [handles.outdir filesep 'group' filesep 'eeg_source'];
+        search_dir = [handles.outdir filesep 'group' filesep 'eeg_source']; % if source-level analysis were performed
             stat_list = dir(search_dir);
             stat_list = stat_list([stat_list.isdir]);
             stat_list = stat_list(~ismember({stat_list.name},{'.','..'}));
@@ -1245,6 +1270,16 @@ handles = guidata(gcbo);
         if any(ismember({stat_list.name},{'ica_results','seed_connectivity'}))
             set(handles.visual_connectivity,'Enable','On');
         end
+        search_dir = [handles.outdir filesep 'group' filesep 'eeg_signal']; % if scalp-level analysis were performed
+            stat_list = dir(search_dir);
+            stat_list = stat_list([stat_list.isdir]);
+            stat_list = stat_list(~ismember({stat_list.name},{'.','..'}));
+        
+        if any(ismember({stat_list.name},{'ers_erd_results','erp_results'}))
+            set(handles.visual_activity,'Enable','On');
+        end
+
+
     else
         table_steps = getappdata(handles.gui,'table_steps');
         flag_visual = getappdata(handles.gui,'flag_visual');
