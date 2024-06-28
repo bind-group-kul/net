@@ -40,7 +40,7 @@ mainbox = uiextras.VBox('Parent',fig_output,'Padding',10*min(k));
                     s = [s; {['ica_results' filesep option_list(idx).name]}];
                 end
             end
-            if isdir([search_dir filesep 'seed_connectivity'])
+            if isdir([search_dir filesep 'seed_connectivity' filesep 'mni'])
                 s = [s; {'seed_connectivity'}];
             end
             %search_list = {'seed_connectivity';'ica_results'};
@@ -67,10 +67,15 @@ mainbox = uiextras.VBox('Parent',fig_output,'Padding',10*min(k));
             
             button_matrix = uicontrol('Parent',box_buttons,'Style','pushbutton','String','Plot',...
                 'FontName',fontname,'FontSize',fontsize,'Enable','Off','Callback',@show_matrix);
-            if exist([search_dir filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep 'matrix_connectivity_ffx.mat'],'file') || ...
-               exist([search_dir filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep 'matrix_connectivity_rfx.mat'],'file') || ...
-               exist([search_dir filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep 'matrix_connectivity_rfx_thres.mat'],'file') %updated by JS 12.2022 according to new outup of statistic analysis
-                set(button_matrix,'Enable','On');
+            if ~isempty(dir([search_dir filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep '**'])) %modifed based on the statistic output, JS 06.2024
+                ff = dir([search_dir filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep '**']);
+                for i = 1:length(ff)
+                    if ff(i).bytes > 0 && strcmpi(ff(i).name,'matrix_connectivity_ffx.mat') || ...
+                        strcmpi(ff(i).name,'matrix_connectivity_rfx.mat') || ...
+                        strcmpi(ff(i).name,'matrix_connectivity_rfx_thres.mat')
+                        set(button_matrix,'Enable','On');
+                    end
+                end
             end
             
         set(box_buttons,'Sizes',[25*k(2) 25*k(2) 40*k(2) 25*k(2) 30*k(2)])
@@ -106,7 +111,7 @@ handles.map_list = [];
 stat_type = get(handles.select_stat,'String');
 stat_type = stat_type(get(handles.select_stat,'Value'));
 
-search_dir = [handles.outdir filesep 'group' filesep 'eeg_source' filesep char(stat_type) filesep '**/*.nii'];
+search_dir = [handles.outdir filesep 'group' filesep 'eeg_source' filesep char(stat_type) filesep '**' filesep '*.nii'];
 handles.map_list = dir(search_dir);
 s = {'Choose map'};
 for m = 1:length(handles.map_list)
@@ -228,7 +233,13 @@ handles = guidata(gcbo);
 path = [handles.outdir filesep 'group'];
 
     % --- plot ffx
-connfile  = [path filesep 'eeg_source' filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep 'matrix_connectivity_ffx.mat'];
+ff = dir([path filesep 'eeg_source' filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep '**']);
+for i = 1:length(ff)
+    if ff(i).bytes > 0 && strcmpi(ff(i).name,'matrix_connectivity_ffx.mat')
+        connfile = [ff(i).folder filesep ff(i).name];
+    end
+end
+    
 if exist(connfile)
     conn_data = load(connfile);
 %nf    = 80;
@@ -335,7 +346,12 @@ end
 %}
 end
     % --- plot rfx
-connfile  = [path filesep 'eeg_source' filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep 'matrix_connectivity_rfx.mat'];
+for i = 1:length(ff)
+    if ff(i).bytes > 0 && strcmpi(ff(i).name,'matrix_connectivity_rfx.mat')
+        connfile = [ff(i).folder filesep ff(i).name];
+    end
+end
+
 if exist(connfile)
     conn_data = load(connfile);
     nseed = numel(conn_data.seed_info);
@@ -380,7 +396,11 @@ if exist(connfile)
     colorbar('Location','eastoutside','Position', [cbar_pos(1)+cbar_pos(3)+0.01 cbar_pos(2) 0.01 cbar_pos(4)])
 end
     % --- plot rfx_thres
-connfile  = [path filesep 'eeg_source' filesep 'seed_connectivity' filesep 'matrix_connectivity' filesep 'matrix_connectivity_rfx_thres.mat'];
+for i = 1:length(ff)
+    if ff(i).bytes > 0 && strcmpi(ff(i).name,'matrix_connectivity_rfx_thres.mat')
+        connfile = [ff(i).folder filesep ff(i).name];
+    end
+end
 if exist(connfile)
     conn_data = load(connfile);
     nseed = numel(conn_data.seed_info);

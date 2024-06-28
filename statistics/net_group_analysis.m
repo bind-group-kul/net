@@ -4,7 +4,14 @@ if any(strcmpi(options.flag,{'erp','ers_erd','rsn','seed'}))
     
     NET_folder = net('path');
     dd = dir([main_directory filesep 'dataset*']);
-    
+    torem = [];
+    for i = 1:numel(dd)
+        if dd(i).isdir ~= 1
+            torem = [torem; i];
+        end
+    end
+    dd(torem,:) = [];
+
     sx=zeros(1,numel(dd));
     for i=1:length(dd)
         sx(i)=str2num(dd(i).name(8:end));
@@ -331,8 +338,12 @@ if any(strcmpi(options.flag,{'sica','tica','rsn','seed'}))
         
         for n = 1:nseed
             for m = n+1:nseed
+                if ~isnan(squeeze(bandmatrices(n,m,b,:))) % control for nan values, JS 06.2024
                 [~,pvals(n,m,b),~,stats] = ttest(squeeze(bandmatrices(n,m,b,:))); tvals(n,m,b) = stats.tstat;
                 pvals(m,n,b) = pvals(n,m,b); tvals(m,n,b) = tvals(n,m,b);
+                else
+                    pvals(n,m,b) = -1; pvals(m,n,b) = -1; tvals(n,m,b) = -1;
+                end
             end
         end
     end
