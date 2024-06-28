@@ -498,7 +498,7 @@ handles = guidata(gcbo);
         
         ddsub_seed = [dd filesep 'eeg_source' filesep 'seed_connectivity'];
         ddsub_ica = [dd filesep 'eeg_source' filesep 'ica_results'];
-        if exist([ddsub_seed filesep 'matrix_connectivity' filesep 'matrix_connectivity.mat'],'file') || exist([ddsub_ica filesep 'sica' filesep 'mni' filesep 'rsn'],'dir') || exist([ddsub_ica filesep 'tica' filesep 'mni' filesep 'rsn'],'dir')
+        if exist([ddsub_seed filesep 'matrix_connectivity'],'dir') || exist([ddsub_ica filesep 'sica' filesep 'mni' filesep 'rsn'],'dir') || exist([ddsub_ica filesep 'tica' filesep 'mni' filesep 'rsn'],'dir')
             table_steps.connectivity(n,1) = 1;
         else
             table_steps.connectivity(n,1) = 0;

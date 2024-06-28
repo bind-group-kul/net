@@ -80,7 +80,7 @@ function [ ] = net_cardiac_correction_skew( processedeeg_filename, options)
             skews=abs(skewness(IC'));
             bad_ics_skew = find(skews >= options.skewness_thres);            
         end
-        
+       
         %% 2.6 Cardiac artifact removal: referential approach with correlation
         bad_ics_corr = [];
         if(strcmp(options.reference_enable, 'on'))
@@ -115,22 +115,22 @@ function [ ] = net_cardiac_correction_skew( processedeeg_filename, options)
         end
         
         %% 2.9 show PSD comparison figures
-% %         Fs = fsample(D);
-% %         nfft = 1024;
-% %         df = [1 20];
-% %         
-% %         show_figs = 'on';
-% %         if(strcmp(show_figs, 'on'))
-% %             figure;
-% %             subplot(1,2,1)
-% %             [Fxx,Pxx]=net_psd(D(list_eeg,:,:),nfft,Fs,@hanning,50,df,'on');
-% %             xlim([0 7])
-% %             ylim([0 100])
-% %             subplot(1,2,2)
-% %             [Fxx,Pxx]=net_psd(data_new,nfft,Fs,@hanning,50,df,'on');
-% %             xlim([0 7])
-% %             ylim([0 100])
-% %         end
+        Fs = fsample(D);
+        nfft = 1024;
+        df = [1 20];
+        
+        show_figs = 'off';
+        if(strcmp(show_figs, 'on'))
+            figure;
+            subplot(1,2,1)
+            [Fxx,Pxx]=net_psd(D(list_eeg,:,:),nfft,Fs,@hanning,50,df,'on');
+            xlim([0 7])
+            ylim([0 100])
+            subplot(1,2,2)
+            [Fxx,Pxx]=net_psd(data_new,nfft,Fs,@hanning,50,df,'on');
+            xlim([0 7])
+            ylim([0 100])
+        end
         
         %% 2.10 save data back to D struck
         D(list_eeg,:,:)=data_new;

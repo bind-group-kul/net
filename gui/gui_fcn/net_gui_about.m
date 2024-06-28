@@ -36,17 +36,17 @@ set(icon,'Sizes',[-1 255*handles.k(1) -1])
 
 software_title = 'Software';
 uicontrol('Parent',about,'Style','Text','String',software_title,...
-    'FontName','Verdana','FontSize',9.5*handles.k(2),'HorizontalAlignment','left','FontWeight','bold');
-software_str = 'Available for download at:  https://www.xxxxx';
+    'FontName','Verdana','FontSize',11.5*handles.k(2),'HorizontalAlignment','left','FontWeight','bold');
+software_str = 'Available for download at: https://github.com/bind-group-kul/net';
 uicontrol('Parent',about,'Style','Text','String',software_str,...
-    'FontName','Verdana','FontSize',8*handles.k(2),'HorizontalAlignment','left');
+    'FontName','Verdana','FontSize',10*handles.k(2),'HorizontalAlignment','left');
 
 paper_title = 'Related works';
 uicontrol('Parent',about,'Style','Text','String',paper_title,...
-    'FontName','Verdana','FontSize',9.5*handles.k(2),'HorizontalAlignment','left','FontWeight','bold');
-paper1 = 'Taberna, G. A., Samogin J., Zhao M., Marino, M., Guarnieri R., Cuartas Morales E., Ganzetti M., Liu Q. & Mantini, D. NET: open source software for large-scale analysis of neural activity and connectivity from high-density electroencephalography data.';
+    'FontName','Verdana','FontSize',11.5*handles.k(2),'HorizontalAlignment','left','FontWeight','bold');
+paper1 = 'Taberna, G. A., Samogin J., Zhao M., Marino, M., Guarnieri R., Cuartas Morales E., Ganzetti M., Liu Q. & Mantini, D. Large-scale analysis of neural activity and connectivity from high-density electroencephalographic data.';
 uicontrol('Parent',about,'Style','Text','String',paper1,...
-    'FontName','Verdana','FontSize',8*handles.k(2),'HorizontalAlignment','left');
+    'FontName','Verdana','FontSize',10*handles.k(2),'HorizontalAlignment','left');
 % paper2 = 'Taberna, G. A., Guarnieri, R. & Mantini, D. SPOT3D: Spatial positioning toolbox for head markers using 3D scans. Sci Rep 9, 12813, doi:10.1038/s41598-019-49256-0 (2019).';
 % uicontrol('Parent',about,'Style','Text','String',paper2,...
 %     'FontName','Tahoma','FontSize',13*handles.k(2),'HorizontalAlignment','left');
