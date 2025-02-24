@@ -999,6 +999,10 @@ for subject_i = handles.subjects
     waitbar(.35,f,'...BCG artefact attenuation (5/14)');
     net_rmBCGartifact(processedeeg_filename, options.bcg_artifacts);
     
+    %% Attenuating TMS artifacts (for EEG/TMS data only)
+    waitbar(.2,f,'...TMS artefact attenuation (6/14)');
+    net_remove_tms_artifact(processedeeg_filename, options.tms_artifacts);
+
     %% filtering EEG data
     net_filtering(processedeeg_filename,options.filtering);
     

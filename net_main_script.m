@@ -147,54 +147,58 @@ for subject_i = 1:nsubjs
         f.Name = ['Dataset ' num2str(subject_i) ' - SIGNAL PROCESSING'];
 
         %% NET - Detecting and Repairing the bad channels    
-        waitbar(.05,f,'...bad channel detection (1/12)');
+        waitbar(.05,f,'...bad channel detection (1/13)');
         net_repair_badchannel(processedeeg_filename, options.badchannel_detection);
 
         %% filtering EEG data
-        waitbar(.15,f,'...EEG filtering (2/12)');
+        waitbar(.15,f,'...EEG filtering (2/13)');
         net_filtering(processedeeg_filename,options.filtering);
         
         %% Attenuating fMRI gradient artifacts (for EEG/fMRI data only)
-        waitbar(.17,f,'...fMRI gradient artefact attenuation (3/12)');
+        waitbar(.17,f,'...fMRI gradient artefact attenuation (3/13)');
         net_rmMRIartifact(processedeeg_filename, options.fmri_artifacts);
         
         %% Attenuating BCG artifacts (for EEG/fMRI data only)
-        waitbar(.2,f,'...BCG artefact attenuation (4/12)');
+        waitbar(.2,f,'...BCG artefact attenuation (4/13)');
         net_rmBCGartifact(processedeeg_filename, options.bcg_artifacts);
+        
+        %% Attenuating TMS artefacts (for EEG/TMS data only)
+        waitbar(.2,f,'...TMS artefact attenuation (5/13)');
+        net_remove_tms_artifact(processedeeg_filename, options.tms_artifacts);
         
         %% filtering EEG data
         net_filtering(processedeeg_filename,options.filtering);
         
         %% resampling EEG data for artifact correction
-        waitbar(.25,f,'...EEG resampling (5/12)');
+        waitbar(.25,f,'...EEG resampling (6/13)');
         net_resampling(processedeeg_filename,options.resampling_bss);
         
         %% Ocular artifact attenuation using BSS
-        waitbar(.3,f,'...ocular artefact attenuation (6/12)');
+        waitbar(.3,f,'...ocular artefact attenuation (7/13)');
         net_ocular_correction_wKurt(processedeeg_filename, options.ocular_correction);
         
         %% Movement artifact attenuation using BSS
-        waitbar(.4,f,'...movement artefact attenuation (7/12)');
+        waitbar(.4,f,'...movement artefact attenuation (8/13)');
         net_movement_correction_wSampEn(processedeeg_filename, options.mov_correction);
         
         %% Myogenic artifact attenuation using BSS
-        waitbar(.5,f,'...myogenic artefact attenuation (8/12)');
+        waitbar(.5,f,'...myogenic artefact attenuation (9/13)');
         net_muscle_correction_gamma_ratio(processedeeg_filename, options.muscle_correction);
         
         %% Cardiac artifact attenuation using BSS
-        waitbar(.6,f,'...cardiac artefact attenuation (9/12)');
+        waitbar(.6,f,'...cardiac artefact attenuation (10/13)');
         net_cardiac_correction_skew(processedeeg_filename, options.cardiac_correction);
         
         %% De-spiking EEG data
-        waitbar(.7,f,'...EEG despiking (10/12)');
+        waitbar(.7,f,'...EEG despiking (11/13)');
         net_despiking(processedeeg_filename,options.despiking);
         
         %% Re-referencing EEG data
-        waitbar(.8,f,'...EEG re-referencing (11/12)');
+        waitbar(.8,f,'...EEG re-referencing (12/13)');
         net_reference(processedeeg_filename,options.reference);
         
         %% resampling EEG data for source localization
-        waitbar(.9,f,'...EEG resampling (12/12)');
+        waitbar(.9,f,'...EEG resampling (13/13)');
         net_resampling(processedeeg_filename,options.resampling_src);
 
         close(f)

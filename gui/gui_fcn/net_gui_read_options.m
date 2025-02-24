@@ -67,6 +67,11 @@ switch flag
         options.bcg_artifacts.enable       = char(xls_preprocessing(parameters_i).parameters_data); parameters_i = parameters_i+1;
         options.bcg_artifacts.ecg_channel  = excel_str2num(xls_preprocessing(parameters_i).parameters_data); parameters_i = parameters_i+1;
         
+        options.tms_artifacts.enable      = char(xls_preprocessing(parameters_i).parameters_data); parameters_i = parameters_i+1;
+        options.tms_artifacts.rel_peak_height = excel_str2num(xls_preprocessing(parameters_i).parameters_data); parameters_i = parameters_i+1;
+        options.tms_artifacts.peak_distance = excel_str2num(xls_preprocessing(parameters_i).parameters_data); parameters_i = parameters_i+1;
+        options.tms_artifacts.ntp_artifact = excel_str2num(xls_preprocessing(parameters_i).parameters_data); parameters_i = parameters_i+1;
+
         options.resampling_bss.enable = char(xls_preprocessing(parameters_i).parameters_data); parameters_i = parameters_i+1;
         options.resampling_bss.new_fs = excel_str2num(xls_preprocessing(parameters_i).parameters_data); parameters_i = parameters_i+1;
         
