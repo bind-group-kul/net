@@ -28,16 +28,21 @@ output_file=X.output_filename;
 
 
 % correct event file is needed
-
+if ispc %JS 07.2025
+    if contains(raweeg_filename,'signal1.bin')
+        raweeg_filename = raweeg_filename(1:(strfind(raweeg_filename,'signal1.bin')-2));
+    else
+        error('Please select the ''signal1.bin'' file as raw EEG file')
+    end
+end
 A=dir([raweeg_filename filesep 'Events*.xml']);
 if size(A,1)>0   % added by QL, 07.10.2014 to check whether there is events*.xml file.
     ev_file=A.name;
     
-    if not(isempty(strfind(ev_file,'255')))
+    if ~contains(ev_file,'Events_DIN_1') %JS 07.2025
         movefile([raweeg_filename filesep ev_file],[raweeg_filename filesep 'Events_DIN_1.xml']);
     end
 end
-
 
 %Supply details in a struct format for the SPM function to start the file
 %conversion

@@ -128,13 +128,14 @@ if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_en
                  options_ers_erd.baseline = triggers(iter_conditions).baseline;
                  %options_ers_erd.time_range = triggers(iter_conditions).time_range;
                  
-                 [tf_map, times] = net_ers_erd(Ptot,T,events{iter_conditions},options_ers_erd);
+                 [tf_map, tf_map_trial, times] = net_ers_erd(Ptot,T,events{iter_conditions},options_ers_erd);
                 
                 %save result to structure
                 ers_erd_sensor(iter_conditions).condition_name = triggers(iter_conditions).condition_name;
                 ers_erd_sensor(iter_conditions).time_axis = times;
                 ers_erd_sensor(iter_conditions).frequency_axis = frequencies;
                 ers_erd_sensor(iter_conditions).tf_map(i,:,:) = tf_map;
+                ers_erd_sensor(iter_conditions).trials(i,:,:,:) = tf_map_trial;
                 ers_erd_sensor(iter_conditions).label{i} = elec_labels{i};
              end
              t = toc;
@@ -200,7 +201,7 @@ if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_en
                 options_ers_erd.baseline = triggers(iter_conditions).baseline;
                 %options_ers_erd.time_range = triggers(iter_conditions).time_range;
                
-                [tf_map, times] = net_ers_erd(Ptot,T,events{iter_conditions},options_ers_erd);
+                [tf_map, ~ , times] = net_ers_erd(Ptot,T,events{iter_conditions},options_ers_erd);
                 
                 band_num = length(triggers(iter_conditions).frequency);%% added by M.Z. 22. May. 2018
                 
@@ -311,13 +312,14 @@ if(strcmp(options_ers_erd.mapping_enable, 'on') || strcmp(options_ers_erd.roi_en
                 options_ers_erd.baseline = triggers(iter_conditions).baseline;
                 %options_ers_erd.time_range = triggers(iter_conditions).time_range;
                 %get tf-map
-                [tf_map, times] = net_ers_erd(Ptot,T,events{iter_conditions},options_ers_erd);
+                [tf_map, tf_map_trial, times] = net_ers_erd(Ptot,T,events{iter_conditions},options_ers_erd);
                 
                 %save result to structure
                 ers_erd_roi(iter_conditions).condition_name = triggers(iter_conditions).condition_name;
                 ers_erd_roi(iter_conditions).time_axis = times;
                 ers_erd_roi(iter_conditions).frequency_axis = frequencies;
                 ers_erd_roi(iter_conditions).tf_map(i,:,:) = tf_map;
+                ers_erd_roi(iter_conditions).trials(i,:,:,:) = tf_map_trial;
                 ers_erd_roi(iter_conditions).label{i} = seed_info(i).label;
                 
             end

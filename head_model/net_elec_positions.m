@@ -28,7 +28,7 @@ for i=1:length(tpl_labels)
     tpl_labels{i} = upper(tpl_labels{i});
 end
 
-[c,ia,ib] = intersect(tpl_labels,sens.label,'stable');
+[c,ia,ib] = intersect(tpl_labels,upper(sens.label),'stable');
 
 sens.chanpos=sens.chanpos(ib,:);
 sens.chantype=sens.chantype(ib,:);

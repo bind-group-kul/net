@@ -21,6 +21,13 @@ switch lower(options_eegconvert.format)
         D = net_edf2spm(S); %% updated by Mingqi
 end
 
+% % added by JS on 01.2025 if BP data don't have conventional labels
+label = chanlabels(D, D.indchantype('EEG'));
+tmplabel = ft_read_sens([NET_folder filesep 'template' filesep 'electrode_position' filesep options_posconvert.template '.sfp']);
+tmplabel = tmplabel.label;
+if isempty(intersect(label, tmplabel)) && numel(label)==numel(tmplabel)
+   D = chanlabels(D,D.indchantype('EEG'),tmplabel');
+end
 
 D = chantype(D,[1:size(D,1)],'Other'); %initialize all channels to Other
 
@@ -94,6 +101,7 @@ S.task = 'loadeegsens'; %Loading eeg sensors will be the task to be done
 S.source = 'locfile';   % Use a location file for doing the above task
 S.sensfile = [NET_folder filesep 'template' filesep 'electrode_position' filesep options_posconvert.template '.sfp'];
 S.save = true;
+
 D = spm_eeg_prep(S);
 
 

@@ -24,7 +24,7 @@ if any(strcmpi(options.flag,{'erp','ers_erd','rsn','seed'}))
         filelist{j,:}=str;
     end
     
-    % preparing data and performing statistical analysis
+%     preparing data and performing statistical analysis
     for j=1:length(ff)
         filename = [dd(1).folder filesep dd(1).name filesep filelist{j,:}(4:end)];
         V = spm_vol(filename);
@@ -239,7 +239,11 @@ if any(strcmpi(options.flag,{'erp','ers_erd'}))
                 erp(i).condition_name = erp1(i).condition_name;
                 erp(i).time_axis = erp1(i).time_axis;
                 erp(i).erp_tc = reshape(output(i).mean_data,dim);
-                erp(i).label = erp1(i).label;
+                if contains(varname, 'sensor')
+                    erp(i).label = erp1(i).label;
+                elseif contains(varname, 'roi')
+                    erp(i).label = erp1(i).roi_label;
+                end
             end
             save([output_file(1:(end-4)) '_ffx.mat'], 'erp','elecpos'), clear erp
 
@@ -248,7 +252,11 @@ if any(strcmpi(options.flag,{'erp','ers_erd'}))
                 erp(i).condition_name = erp1(i).condition_name;
                 erp(i).time_axis = erp1(i).time_axis;
                 erp(i).erp_tc = reshape(output(i).tscore_data,dim);
-                erp(i).label = erp1(i).label;
+                if contains(varname, 'sensor')
+                    erp(i).label = erp1(i).label;
+                elseif contains(varname, 'roi')
+                    erp(i).label = erp1(i).roi_label;
+                end
             end
             save([output_file(1:(end-4)) '_rfx.mat'], 'erp','elecpos'), clear erp
             clear output erp1
@@ -280,7 +288,12 @@ if any(strcmpi(options.flag,{'erp','ers_erd'}))
                 ers_erd(i).time_axis = erserd1(i).time_axis;
                 ers_erd(i).frequency_axis = erserd1(i).frequency_axis;
                 ers_erd(i).tf_map = reshape(output(i).mean_data,dim);
-                ers_erd(i).label = erserd1(i).label;
+% %                 ers_erd(i).warped_events_times = erserd1(1).warped_events_times;
+                if contains(varname, 'sensor')
+                    ers_erd(i).label = erserd1(i).label;
+                elseif contains(varname, 'roi')
+                    ers_erd(i).label = erserd1(i).roi_label;
+                end
             end
             save([output_file(1:(end-4)) '_ffx.mat'], 'ers_erd','elecpos'), clear ers_erd
 
@@ -290,7 +303,12 @@ if any(strcmpi(options.flag,{'erp','ers_erd'}))
                 ers_erd(i).time_axis = erserd1(i).time_axis;
                 ers_erd(i).frequency_axis = erserd1(i).frequency_axis;
                 ers_erd(i).tf_map = reshape(output(i).tscore_data,dim);
-                ers_erd(i).label = erserd1(i).label;
+% %                 ers_erd(i).warped_events_times = erserd1(1).warped_events_times;
+                if contains(varname, 'sensor')
+                    ers_erd(i).label = erserd1(i).label;
+                elseif contains(varname, 'roi')
+                    ers_erd(i).label = erserd1(i).roi_label;
+                end
             end
             save([output_file(1:(end-4)) '_rfx.mat'], 'ers_erd','elecpos'), clear ers_erd
             clear output erserd1

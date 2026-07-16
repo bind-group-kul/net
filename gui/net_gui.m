@@ -1114,7 +1114,7 @@ if any(strcmpi(struct2cell(options.erp),'on')) || any(strcmpi(struct2cell(option
         net_erp_analysis(source_filename,options.erp);
 
         %% ERS/ERD analysis
-        net_ers_erd_analysis(source_filename,options.ers_erd);
+        net_ers_erd_analysis(source_filename,options.ers_erd);       
         
         handles.table_steps.activity(subject_i,1) = 1;
         setappdata(handles.gui,'table_steps',handles.table_steps);

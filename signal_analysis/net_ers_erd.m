@@ -4,7 +4,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-function [tf_map,times_in_ms] = net_ers_erd(data,time_axis,events,options)
+function [tf_map,tf_map_trial,times_in_ms] = net_ers_erd(data,time_axis,events,options)
 
 n_range=3;
 
@@ -49,3 +49,9 @@ tf_map=100*(mean_pow-bas*ones(1,ntp))./(bas*ones(1,ntp)); % definition of ERS/ER
 
 times_in_ms=1000/Fs*[pretrig:posttrig]; %time_in_ms = 1000ms*[Ts*sample_point], Ts = 1/Fs
 
+% ERS/ERD for each trial, JS 02.2026
+for i=1:ntrig
+    pow = squeeze(epoched_data(i,:,:));
+    bas=mean(pow(:,vect),2);
+    tf_map_trial(i,:,:)=100*(pow-bas*ones(1,ntp))./(bas*ones(1,ntp)); % definition of ERS/ERD, refer to https://doi.org/10.1016/S1388-2457(99)00141-8
+end

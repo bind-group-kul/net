@@ -1,26 +1,36 @@
 function net_statistical_analysis(pathx,options_stats,nsubjs)
 
 if not(isnan(options_stats.subjects)) % JS, 08.2023 - included several options
-    if strfind(options_stats.subjects,' ')
-        error('Please remove all the spaces from the field statistical_analysis/stats.subj. Use commas to list datasets or the notation "first_dataset:last_dataset".')
-    end
     if strcmpi(options_stats.subjects,'all')        % all subjs
         options_stats.subjects = 1:nsubjs;
+        fprintf('\nAll datasets included in the statistical analyses.')
     elseif strcmpi(options_stats.subjects,'none')   % no subjs
         fprintf('\nNo statistical analyses to run.')
         return
     else                                            % some subjs
-        if ~isempty(strfind(options_stats.subjects,':'))    % first_sbj:last_sbj
-            tmp = strsplit(options_stats.subjects,':');
-            options_stats.subjects = str2num(tmp{1}):str2num(tmp{2});
-            if str2num(tmp{2})>nsubjs
-                error('Number of datasets included in the statistic analysis higher than the available datasets.')
+        if ~isempty(strfind(options_stats.subjects,'[')) && ~isempty(strfind(options_stats.subjects,']'))   % [first_sbj last_sbj]
+            tmp = strsplit(options_stats.subjects,'[');
+            subj = [];
+            for i = 1:numel(tmp)
+                if contains(tmp(i),']')
+                    clear tmp2
+                    tmp2 = strsplit(tmp{i},']');
+                    for j = 1:numel(tmp2)
+                        if length(tmp2{j})>=1 && ~strcmp(tmp2{j},' ')
+                            clear tmp3
+                            tmp3 = strsplit(tmp2{j}, ' ');
+                            if length(tmp3)==2
+                                subj = [subj, str2num(tmp3{1}):str2num(tmp3{2})];
+                            elseif length(tmp3) == 1
+                                subj = [subj, str2num(tmp3{1})];
+                            end
+                        end
+                    end
+                end
             end
-        elseif ~isempty(strfind(options_stats.subjects,',')) % sbj1,sbj2,...
-            tmp = strsplit(options_stats.subjects,','); dt = [];
-            for i = 1:length(tmp), dt = [dt, str2num(tmp{i})]; end
-            options_stats.subjects = sort(dt);
-            if options_stats.subjects(end)>nsubjs
+            options_stats.subjects = subj;
+            
+            if subj(end)> nsubjs
                 error('Number of datasets included in the statistic analysis higher than the available datasets.')
             end
         end
