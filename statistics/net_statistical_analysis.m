@@ -33,7 +33,6 @@ if not(isnan(options_stats.subjects)) % JS, 08.2023 - included several options
             if subj(end)> nsubjs
                 error('Number of datasets included in the statistic analysis higher than the available datasets.')
             end
-            nsubjs = numel(options_stats.subjects);
         end
     
     end   

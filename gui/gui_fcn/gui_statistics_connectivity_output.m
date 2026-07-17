@@ -111,7 +111,7 @@ handles.map_list = [];
 stat_type = get(handles.select_stat,'String');
 stat_type = stat_type(get(handles.select_stat,'Value'));
 
-search_dir = [handles.outdir filesep 'group' filesep 'eeg_source' filesep char(stat_type) filesep '**' filesep '*.nii'];
+search_dir = [handles.outdir filesep 'group' filesep 'eeg_source' filesep char(stat_type) filesep '**/*.nii'];
 handles.map_list = dir(search_dir);
 s = {'Choose map'};
 for m = 1:length(handles.map_list)
@@ -239,7 +239,7 @@ for i = 1:length(ff)
         connfile = [ff(i).folder filesep ff(i).name];
     end
 end
-    
+
 if exist(connfile)
     conn_data = load(connfile);
 %nf    = 80;
@@ -401,6 +401,7 @@ for i = 1:length(ff)
         connfile = [ff(i).folder filesep ff(i).name];
     end
 end
+
 if exist(connfile)
     conn_data = load(connfile);
     nseed = numel(conn_data.seed_info);

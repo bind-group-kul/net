@@ -80,7 +80,7 @@ function [ ] = net_cardiac_correction_skew( processedeeg_filename, options)
             skews=abs(skewness(IC'));
             bad_ics_skew = find(skews >= options.skewness_thres);            
         end
-       
+        
         %% 2.6 Cardiac artifact removal: referential approach with correlation
         bad_ics_corr = [];
         if(strcmp(options.reference_enable, 'on'))
